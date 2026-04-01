@@ -70,3 +70,4 @@ pnpm dev
 | `pnpm prisma:generate` | Generar Prisma Client             |
 | `pnpm prisma:migrate`  | Ejecutar migraciones de Prisma    |
 | `pnpm prisma:studio`   | Abrir Prisma Studio               |
+| `docker compose up -d` | Levantar contenedor de PostgreSQL |
