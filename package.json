@@ -3,24 +3,32 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
-  },
-  "dependencies": {
-    "next": "16.2.2",
-    "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "dev": "pnpm -r --parallel run dev",
+    "dev:frontend": "pnpm --filter @luxury-grand-stage/frontend dev",
+    "dev:backend": "pnpm --filter @luxury-grand-stage/backend dev",
+    "build": "pnpm -r run build",
+    "build:frontend": "pnpm --filter @luxury-grand-stage/frontend build",
+    "build:backend": "pnpm --filter @luxury-grand-stage/backend build",
+    "lint": "pnpm -r run lint",
+    "type-check": "pnpm -r run type-check",
+    "prisma:generate": "pnpm --filter @luxury-grand-stage/backend prisma:generate",
+    "prisma:migrate": "pnpm --filter @luxury-grand-stage/backend prisma:migrate",
+    "prisma:studio": "pnpm --filter @luxury-grand-stage/backend prisma:studio",
+    "prepare": "husky"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.2",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+    "husky": "^9.1.7",
+    "typescript": "^6.0.2"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@nestjs/core",
+      "@prisma/client",
+      "@prisma/engines",
+      "prisma",
+      "sharp",
+      "unrs-resolver",
+      "@swc/core"
+    ]
   }
 }
