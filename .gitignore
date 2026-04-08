@@ -50,3 +50,6 @@ packages/backend/prisma/migrations/
 
 # docker
 postgres_data/
+
+# agents
+.claude/settings.local.json
