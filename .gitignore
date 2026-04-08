@@ -52,4 +52,4 @@ packages/backend/prisma/migrations/
 postgres_data/
 
 # agents
-.claude/settings.local.json
+.claude/
