@@ -11,3 +11,31 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum TipoEvento {
+  CONCIERTO
+  FIESTA_TEMATICA
+  ESPECTACULO
+  CORPORATIVO
+  BODA
+  CUMPLEANOS
+  OTRO
+}
+
+model Evento {
+  idEvento         Int        @id @default(autoincrement()) @map("id_evento")
+  idUsuarioCreador Int?       @map("id_usuario_creador")
+  nombre           String     @db.VarChar(255)
+  descripcion      String?    @db.Text
+  tipo             TipoEvento
+  fechaEvento      DateTime   @map("fecha_evento") @db.Date
+  horaInicio       DateTime   @map("hora_inicio") @db.Time()
+  horaFin          DateTime   @map("hora_fin") @db.Time()
+  presupuesto      Decimal    @default(0) @db.Decimal(12, 2)
+  ingresoReal      Decimal    @default(0) @map("ingreso_real") @db.Decimal(12, 2)
+  gastoReal        Decimal    @default(0) @map("gasto_real") @db.Decimal(12, 2)
+  precioBoleta     Decimal    @default(0) @map("precio_boleta") @db.Decimal(12, 2)
+  creadoEn         DateTime   @default(now()) @map("creado_en")
+
+  @@map("evento")
+}
