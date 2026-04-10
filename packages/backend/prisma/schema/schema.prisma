@@ -11,3 +11,13 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum TipoEvento {
+  CONCIERTO
+  FIESTA_TEMATICA
+  ESPECTACULO
+  CORPORATIVO
+  BODA
+  CUMPLEANOS
+  OTRO
+}
