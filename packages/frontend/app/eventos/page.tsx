@@ -1,88 +1,52 @@
+import { fetchApi } from "../../lib/api";
+import type { Evento } from "../../lib/types/evento";
 import { formatCurrency } from "../../lib/utils/format-currency";
 import { formatDate } from "../../lib/utils/format-date";
 import { getOccupancyPercent } from "../../lib/utils/get-occupancy-percent";
 
-const events = [
-  {
-    id: "EVT-001",
-    name: "Noche de Salsa",
-    type: "Fiesta temática",
-    date: "2026-04-18",
-    startTime: "20:00",
-    endTime: "23:30",
-    location: "Salón Principal",
-    status: "Planificado",
-    capacity: 250,
-    sold: 180,
-    price: 1500,
-  },
-  {
-    id: "EVT-002",
-    name: "Concierto Acústico",
-    type: "Concierto",
-    date: "2026-04-22",
-    startTime: "19:00",
-    endTime: "22:00",
-    location: "Terraza",
-    status: "Activo",
-    capacity: 120,
-    sold: 96,
-    price: 2000,
-  },
-  {
-    id: "EVT-003",
-    name: "After Office Premium",
-    type: "Evento corporativo",
-    date: "2026-04-25",
-    startTime: "18:30",
-    endTime: "22:30",
-    location: "Área VIP",
-    status: "Planificado",
-    capacity: 80,
-    sold: 54,
-    price: 2500,
-  },
-  {
-    id: "EVT-004",
-    name: "Festival Urbano",
-    type: "Festival",
-    date: "2026-05-02",
-    startTime: "17:00",
-    endTime: "23:59",
-    location: "Salón Principal",
-    status: "Borrador",
-    capacity: 400,
-    sold: 0,
-    price: 1800,
-  },
-];
-
-type Event = (typeof events)[number];
-type EventStatus = Event["status"];
-type EventType = Event["type"];
-
-const statusStyles: Record<EventStatus, string> = {
-  Activo: "border border-emerald-500/40 bg-emerald-500/10 text-emerald-300",
-  Planificado: "border border-amber-500/40 bg-amber-500/10 text-amber-300",
-  Borrador: "border border-zinc-500/40 bg-zinc-500/10 text-zinc-300",
+// NOTE: Phase 6.2 — the page is now an async Server Component fetching real
+// data from `GET /api/eventos`. Phase 6.3/6.4 will remove the mock-only
+// badges (`status`, `location`, `capacity`, `sold`) and rewrite the table
+// with the real columns. Until then, fetched `Evento` records are adapted
+// into the existing display shape so the file type-checks.
+type DisplayEvent = {
+  id: string;
+  name: string;
+  type: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  location: string;
+  status: "Activo" | "Planificado" | "Borrador";
+  capacity: number;
+  sold: number;
+  price: number;
 };
 
-const typeStyles: Record<EventType, string> = {
+const typeStyles: Record<string, string> = {
   "Fiesta temática": "border border-fuchsia-500/30 bg-fuchsia-500/10 text-fuchsia-200",
   Concierto: "border border-sky-500/30 bg-sky-500/10 text-sky-200",
   "Evento corporativo": "border border-violet-500/30 bg-violet-500/10 text-violet-200",
   Festival: "border border-orange-500/30 bg-orange-500/10 text-orange-200",
 };
 
-function EventTypeBadge({ type }: { type: EventType }) {
+const statusStyles: Record<DisplayEvent["status"], string> = {
+  Activo: "border border-emerald-500/40 bg-emerald-500/10 text-emerald-300",
+  Planificado: "border border-amber-500/40 bg-amber-500/10 text-amber-300",
+  Borrador: "border border-zinc-500/40 bg-zinc-500/10 text-zinc-300",
+};
+
+function EventTypeBadge({ type }: { type: string }) {
+  const style =
+    typeStyles[type] ?? "border border-zinc-500/30 bg-zinc-500/10 text-zinc-200";
   return (
-    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${typeStyles[type]}`}>
+    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${style}`}>
       {type}
     </span>
   );
 }
 
-function EventStatusBadge({ status }: { status: EventStatus }) {
+function EventStatusBadge({ status }: { status: DisplayEvent["status"] }) {
   return (
     <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[status]}`}>
       {status}
@@ -90,7 +54,7 @@ function EventStatusBadge({ status }: { status: EventStatus }) {
   );
 }
 
-function EventRow({ event }: { event: Event }) {
+function EventRow({ event }: { event: DisplayEvent }) {
   const occupancyPercent = getOccupancyPercent(event.sold, event.capacity);
 
   return (
@@ -146,7 +110,7 @@ function EventRow({ event }: { event: Event }) {
   );
 }
 
-function EventsTable({ events }: { events: Event[] }) {
+function EventsTable({ events }: { events: DisplayEvent[] }) {
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full text-left text-sm">
@@ -238,11 +202,36 @@ function EventsTableSkeleton() {
   );
 }
 
-export default function Home() {
-  const totalEvents = events.length;
-  const activeEvents = events.filter((event) => event.status === "Activo").length;
-  const plannedEvents = events.filter((event) => event.status === "Planificado").length;
-  const totalTicketsSold = events.reduce((sum, event) => sum + event.sold, 0);
+/**
+ * Adapts a real backend `Evento` into the transitional `DisplayEvent` shape
+ * consumed by the current table. Fields that don't exist on the backend
+ * (`location`, `capacity`, `sold`, `status`) get placeholder values; they
+ * will be removed entirely in Phase 6.3 when the mock-only UI is deleted.
+ */
+function toDisplayEvent(evento: Evento): DisplayEvent {
+  return {
+    id: `EVT-${String(evento.idEvento).padStart(3, "0")}`,
+    name: evento.nombre,
+    type: evento.tipo,
+    date: evento.fechaEvento,
+    startTime: evento.horaInicio,
+    endTime: evento.horaFin,
+    location: "—",
+    status: "Planificado",
+    capacity: 0,
+    sold: 0,
+    price: evento.precioBoleta,
+  };
+}
+
+export default async function EventosPage() {
+  const eventos = await fetchApi<Evento[]>("/eventos");
+  const displayEvents = eventos.map(toDisplayEvent);
+
+  const totalEvents = displayEvents.length;
+  const activeEvents = displayEvents.filter((event) => event.status === "Activo").length;
+  const plannedEvents = displayEvents.filter((event) => event.status === "Planificado").length;
+  const totalTicketsSold = displayEvents.reduce((sum, event) => sum + event.sold, 0);
 
   return (
     <main className="min-h-screen bg-[#161515] px-6 py-8 text-white md:px-10">
@@ -316,7 +305,7 @@ export default function Home() {
             </div>
           </div>
 
-          <EventsTable events={events} />
+          <EventsTable events={displayEvents} />
         </section>
 
         <section className="rounded-[28px] border border-white/10 bg-[#1b1918] p-6 shadow-[0_10px_30px_rgba(0,0,0,0.24)]">
