@@ -1,59 +1,68 @@
 import { fetchApi } from "../../lib/api";
-import type { Evento } from "../../lib/types/evento";
+import { TipoEvento, type Evento } from "../../lib/types/evento";
 import { formatCurrency } from "../../lib/utils/format-currency";
 import { formatDate } from "../../lib/utils/format-date";
 
-// NOTE: Phase 6.3 — mock-only UI (`status`, `location`, `capacity`, `sold`
-// badges/columns and the occupancy bar) has been removed. The transitional
-// `DisplayEvent` shape now mirrors only fields that exist on the backend
-// `Evento` model. Phase 6.4 will replace this table with the final column
-// layout (Nombre, Tipo, Fecha, Horario, Precio Boleta, Presupuesto, Acciones).
-type DisplayEvent = {
-  id: string;
-  name: string;
-  type: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  price: number;
-  budget: number;
+const tipoEventoLabels: Record<TipoEvento, string> = {
+  [TipoEvento.CONCIERTO]: "Concierto",
+  [TipoEvento.FIESTA_TEMATICA]: "Fiesta temática",
+  [TipoEvento.ESPECTACULO]: "Espectáculo",
+  [TipoEvento.CORPORATIVO]: "Corporativo",
+  [TipoEvento.BODA]: "Boda",
+  [TipoEvento.CUMPLEANOS]: "Cumpleaños",
+  [TipoEvento.OTRO]: "Otro",
 };
 
-const typeStyles: Record<string, string> = {
-  "Fiesta temática": "border border-fuchsia-500/30 bg-fuchsia-500/10 text-fuchsia-200",
-  Concierto: "border border-sky-500/30 bg-sky-500/10 text-sky-200",
-  "Evento corporativo": "border border-violet-500/30 bg-violet-500/10 text-violet-200",
-  Festival: "border border-orange-500/30 bg-orange-500/10 text-orange-200",
+const tipoEventoStyles: Record<TipoEvento, string> = {
+  [TipoEvento.CONCIERTO]: "border border-sky-500/30 bg-sky-500/10 text-sky-200",
+  [TipoEvento.FIESTA_TEMATICA]:
+    "border border-fuchsia-500/30 bg-fuchsia-500/10 text-fuchsia-200",
+  [TipoEvento.ESPECTACULO]:
+    "border border-orange-500/30 bg-orange-500/10 text-orange-200",
+  [TipoEvento.CORPORATIVO]:
+    "border border-violet-500/30 bg-violet-500/10 text-violet-200",
+  [TipoEvento.BODA]: "border border-rose-500/30 bg-rose-500/10 text-rose-200",
+  [TipoEvento.CUMPLEANOS]:
+    "border border-amber-500/30 bg-amber-500/10 text-amber-200",
+  [TipoEvento.OTRO]: "border border-zinc-500/30 bg-zinc-500/10 text-zinc-200",
 };
 
-function EventTypeBadge({ type }: { type: string }) {
-  const style =
-    typeStyles[type] ?? "border border-zinc-500/30 bg-zinc-500/10 text-zinc-200";
+function formatEventoId(idEvento: number) {
+  return `EVT-${String(idEvento).padStart(3, "0")}`;
+}
+
+function formatHorario(horaInicio: string, horaFin: string) {
+  return `${horaInicio.slice(0, 5)} - ${horaFin.slice(0, 5)}`;
+}
+
+function EventTypeBadge({ tipo }: { tipo: TipoEvento }) {
+  const style = tipoEventoStyles[tipo] ?? tipoEventoStyles[TipoEvento.OTRO];
+  const label = tipoEventoLabels[tipo] ?? tipoEventoLabels[TipoEvento.OTRO];
   return (
     <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${style}`}>
-      {type}
+      {label}
     </span>
   );
 }
 
-function EventRow({ event }: { event: DisplayEvent }) {
+function EventRow({ evento }: { evento: Evento }) {
   return (
-    <tr className="border-t border-white/10 transition hover:bg-white/[0.03]">
+    <tr className="border-t border-white/10 transition hover:bg-white/3">
       <td className="px-6 py-4">
         <div>
-          <p className="font-semibold text-white">{event.name}</p>
-          <p className="text-xs text-zinc-400">{event.id}</p>
+          <p className="font-semibold text-white">{evento.nombre}</p>
+          <p className="text-xs text-zinc-400">{formatEventoId(evento.idEvento)}</p>
         </div>
       </td>
       <td className="px-6 py-4">
-        <EventTypeBadge type={event.type} />
+        <EventTypeBadge tipo={evento.tipo} />
       </td>
-      <td className="px-6 py-4 text-zinc-300">{formatDate(event.date)}</td>
+      <td className="px-6 py-4 text-zinc-300">{formatDate(evento.fechaEvento)}</td>
       <td className="px-6 py-4 text-zinc-300">
-        {event.startTime} - {event.endTime}
+        {formatHorario(evento.horaInicio, evento.horaFin)}
       </td>
-      <td className="px-6 py-4 text-zinc-300">{formatCurrency(event.price)}</td>
-      <td className="px-6 py-4 text-zinc-300">{formatCurrency(event.budget)}</td>
+      <td className="px-6 py-4 text-zinc-300">{formatCurrency(evento.precioBoleta)}</td>
+      <td className="px-6 py-4 text-zinc-300">{formatCurrency(evento.presupuesto)}</td>
       <td className="px-6 py-4">
         <div className="flex flex-wrap gap-2">
           <button className="rounded-full border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold text-zinc-200 transition hover:bg-white/10">
@@ -71,13 +80,13 @@ function EventRow({ event }: { event: DisplayEvent }) {
   );
 }
 
-function EventsTable({ events }: { events: DisplayEvent[] }) {
+function EventsTable({ eventos }: { eventos: Evento[] }) {
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full text-left text-sm">
-        <thead className="bg-white/[0.03] text-zinc-400">
+        <thead className="bg-white/3 text-zinc-400">
           <tr>
-            <th className="px-6 py-4 font-semibold">Evento</th>
+            <th className="px-6 py-4 font-semibold">Nombre</th>
             <th className="px-6 py-4 font-semibold">Tipo</th>
             <th className="px-6 py-4 font-semibold">Fecha</th>
             <th className="px-6 py-4 font-semibold">Horario</th>
@@ -87,8 +96,8 @@ function EventsTable({ events }: { events: DisplayEvent[] }) {
           </tr>
         </thead>
         <tbody>
-          {events.map((event) => (
-            <EventRow key={event.id} event={event} />
+          {eventos.map((evento) => (
+            <EventRow key={evento.idEvento} evento={evento} />
           ))}
         </tbody>
       </table>
@@ -100,9 +109,9 @@ function EventsTableSkeleton() {
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full text-left text-sm">
-        <thead className="bg-white/[0.03] text-zinc-400">
+        <thead className="bg-white/3 text-zinc-400">
           <tr>
-            <th className="px-6 py-4 font-semibold">Evento</th>
+            <th className="px-6 py-4 font-semibold">Nombre</th>
             <th className="px-6 py-4 font-semibold">Tipo</th>
             <th className="px-6 py-4 font-semibold">Fecha</th>
             <th className="px-6 py-4 font-semibold">Horario</th>
@@ -150,36 +159,16 @@ function EventsTableSkeleton() {
   );
 }
 
-/**
- * Adapts a real backend `Evento` into the transitional `DisplayEvent` shape.
- * After Phase 6.3 this only carries fields that actually exist on the backend
- * model. Phase 6.4 will drop this intermediate shape entirely and consume
- * `Evento` directly in the rewritten table.
- */
-function toDisplayEvent(evento: Evento): DisplayEvent {
-  return {
-    id: `EVT-${String(evento.idEvento).padStart(3, "0")}`,
-    name: evento.nombre,
-    type: evento.tipo,
-    date: evento.fechaEvento,
-    startTime: evento.horaInicio,
-    endTime: evento.horaFin,
-    price: evento.precioBoleta,
-    budget: evento.presupuesto,
-  };
-}
-
 export default async function EventosPage() {
   const eventos = await fetchApi<Evento[]>("/eventos");
-  const displayEvents = eventos.map(toDisplayEvent);
 
-  const totalEvents = displayEvents.length;
-  const uniqueTypes = new Set(displayEvents.map((event) => event.type)).size;
-  const totalBudget = displayEvents.reduce((sum, event) => sum + event.budget, 0);
+  const totalEvents = eventos.length;
+  const uniqueTypes = new Set(eventos.map((evento) => evento.tipo)).size;
+  const totalBudget = eventos.reduce((sum, evento) => sum + evento.presupuesto, 0);
   const averageTicketPrice =
     totalEvents === 0
       ? 0
-      : displayEvents.reduce((sum, event) => sum + event.price, 0) / totalEvents;
+      : eventos.reduce((sum, evento) => sum + evento.precioBoleta, 0) / totalEvents;
 
   return (
     <main className="min-h-screen bg-[#161515] px-6 py-8 text-white md:px-10">
@@ -248,7 +237,7 @@ export default async function EventosPage() {
             </div>
           </div>
 
-          <EventsTable events={displayEvents} />
+          <EventsTable eventos={eventos} />
         </section>
 
         <section className="rounded-[28px] border border-white/10 bg-[#1b1918] p-6 shadow-[0_10px_30px_rgba(0,0,0,0.24)]">
