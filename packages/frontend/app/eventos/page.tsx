@@ -81,7 +81,43 @@ function EventRow({ evento }: { evento: Evento }) {
   );
 }
 
+function EventsEmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full border border-[#3a3a3a] bg-[#2a2a2a]">
+        <svg
+          aria-hidden="true"
+          className="h-7 w-7 text-[#c5a55a]"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M8 2v4M16 2v4M3.5 9h17M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </div>
+      <h3 className="mt-5 text-lg font-semibold text-[#ededed]">
+        Aún no hay eventos registrados
+      </h3>
+      <p className="mt-2 max-w-md text-sm text-zinc-400">
+        Cuando crees tu primer evento aparecerá aquí. Usa el botón{" "}
+        <span className="font-semibold text-[#c5a55a]">Nuevo Evento</span> en la parte
+        superior para comenzar.
+      </p>
+    </div>
+  );
+}
+
 function EventsTable({ eventos }: { eventos: Evento[] }) {
+  if (eventos.length === 0) {
+    return <EventsEmptyState />;
+  }
+
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full text-left text-sm">
