@@ -31,16 +31,17 @@ export function EventForm({
   submitLabel,
   initialValues = {},
 }: EventFormProps) {
-  const title =
-    mode === "edit" ? "Editar Evento" : "Nuevo Evento";
-
+  const title = mode === "edit" ? "Editar Evento" : "Nuevo Evento";
   const buttonText =
     submitLabel ?? (mode === "edit" ? "Guardar Cambios" : "Crear Evento");
 
   return (
     <section className="rounded-[28px] border border-white/10 bg-[#1b1918] p-6 shadow-[0_10px_30px_rgba(0,0,0,0.24)]">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold tracking-tight text-white">{title}</h1>
+        <p className="text-sm font-medium uppercase tracking-[0.25em] text-[#b88a2f]">
+          Luxury Grand Stage
+        </p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight text-white">{title}</h1>
         <p className="mt-2 text-sm text-zinc-400">
           Completa la información principal del evento dentro del sistema.
         </p>
