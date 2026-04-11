@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { fetchApi } from "../../lib/api";
 import { TipoEvento, type Evento } from "../../lib/types/evento";
 import { formatCurrency } from "../../lib/utils/format-currency";
@@ -159,7 +160,7 @@ function EventsTableSkeleton() {
   );
 }
 
-export default async function EventosPage() {
+async function EventosContent() {
   const eventos = await fetchApi<Evento[]>("/eventos");
 
   const totalEvents = eventos.length;
@@ -170,6 +171,88 @@ export default async function EventosPage() {
       ? 0
       : eventos.reduce((sum, evento) => sum + evento.precioBoleta, 0) / totalEvents;
 
+  return (
+    <>
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <article className="rounded-2xl border border-white/10 bg-[#1c1b1a] p-5 shadow-sm">
+          <p className="text-sm text-zinc-400">Total de eventos</p>
+          <p className="mt-3 text-3xl font-bold text-white">{totalEvents}</p>
+        </article>
+        <article className="rounded-2xl border border-white/10 bg-[#1c1b1a] p-5 shadow-sm">
+          <p className="text-sm text-zinc-400">Tipos distintos</p>
+          <p className="mt-3 text-3xl font-bold text-white">{uniqueTypes}</p>
+        </article>
+        <article className="rounded-2xl border border-white/10 bg-[#1c1b1a] p-5 shadow-sm">
+          <p className="text-sm text-zinc-400">Presupuesto total</p>
+          <p className="mt-3 text-3xl font-bold text-white">
+            {formatCurrency(totalBudget)}
+          </p>
+          <p className="mt-1 text-xs text-zinc-500">
+            Precio boleta promedio: {formatCurrency(averageTicketPrice)}
+          </p>
+        </article>
+      </section>
+
+      <section className="rounded-[28px] border border-white/10 bg-[#1b1918] shadow-[0_10px_30px_rgba(0,0,0,0.24)]">
+        <div className="flex flex-col gap-4 border-b border-white/10 p-6 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-white">Eventos registrados</h2>
+            <p className="mt-1 text-sm text-zinc-400">
+              Vista general del CRUD de eventos para administración.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <input
+              className="w-full rounded-xl border border-[#4a3e2a] bg-[#25211d] px-4 py-3 text-sm text-white outline-none transition placeholder:text-zinc-500 focus:border-[#a57c2d] sm:w-72"
+              placeholder="Buscar evento..."
+              type="text"
+            />
+          </div>
+        </div>
+
+        <EventsTable eventos={eventos} />
+      </section>
+    </>
+  );
+}
+
+function EventosContentFallback() {
+  return (
+    <>
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <article className="rounded-2xl border border-white/10 bg-[#1c1b1a] p-5 shadow-sm">
+          <p className="text-sm text-zinc-400">Total de eventos</p>
+          <div className="mt-3 h-9 w-16 animate-pulse rounded bg-white/10" />
+        </article>
+        <article className="rounded-2xl border border-white/10 bg-[#1c1b1a] p-5 shadow-sm">
+          <p className="text-sm text-zinc-400">Tipos distintos</p>
+          <div className="mt-3 h-9 w-16 animate-pulse rounded bg-white/10" />
+        </article>
+        <article className="rounded-2xl border border-white/10 bg-[#1c1b1a] p-5 shadow-sm">
+          <p className="text-sm text-zinc-400">Presupuesto total</p>
+          <div className="mt-3 h-9 w-32 animate-pulse rounded bg-white/10" />
+          <div className="mt-2 h-3 w-48 animate-pulse rounded bg-white/5" />
+        </article>
+      </section>
+
+      <section className="rounded-[28px] border border-white/10 bg-[#1b1918] shadow-[0_10px_30px_rgba(0,0,0,0.24)]">
+        <div className="flex flex-col gap-4 border-b border-white/10 p-6 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-white">Eventos registrados</h2>
+            <p className="mt-1 text-sm text-zinc-400">
+              Vista general del CRUD de eventos para administración.
+            </p>
+          </div>
+        </div>
+
+        <EventsTableSkeleton />
+      </section>
+    </>
+  );
+}
+
+export default function EventosPage() {
   return (
     <main className="min-h-screen bg-[#161515] px-6 py-8 text-white md:px-10">
       <div className="mx-auto max-w-7xl space-y-8">
@@ -199,56 +282,9 @@ export default async function EventosPage() {
           </div>
         </section>
 
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <article className="rounded-2xl border border-white/10 bg-[#1c1b1a] p-5 shadow-sm">
-            <p className="text-sm text-zinc-400">Total de eventos</p>
-            <p className="mt-3 text-3xl font-bold text-white">{totalEvents}</p>
-          </article>
-          <article className="rounded-2xl border border-white/10 bg-[#1c1b1a] p-5 shadow-sm">
-            <p className="text-sm text-zinc-400">Tipos distintos</p>
-            <p className="mt-3 text-3xl font-bold text-white">{uniqueTypes}</p>
-          </article>
-          <article className="rounded-2xl border border-white/10 bg-[#1c1b1a] p-5 shadow-sm">
-            <p className="text-sm text-zinc-400">Presupuesto total</p>
-            <p className="mt-3 text-3xl font-bold text-white">
-              {formatCurrency(totalBudget)}
-            </p>
-            <p className="mt-1 text-xs text-zinc-500">
-              Precio boleta promedio: {formatCurrency(averageTicketPrice)}
-            </p>
-          </article>
-        </section>
-
-        <section className="rounded-[28px] border border-white/10 bg-[#1b1918] shadow-[0_10px_30px_rgba(0,0,0,0.24)]">
-          <div className="flex flex-col gap-4 border-b border-white/10 p-6 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h2 className="text-xl font-semibold text-white">Eventos registrados</h2>
-              <p className="mt-1 text-sm text-zinc-400">
-                Vista general del CRUD de eventos para administración.
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <input
-                className="w-full rounded-xl border border-[#4a3e2a] bg-[#25211d] px-4 py-3 text-sm text-white outline-none transition placeholder:text-zinc-500 focus:border-[#a57c2d] sm:w-72"
-                placeholder="Buscar evento..."
-                type="text"
-              />
-            </div>
-          </div>
-
-          <EventsTable eventos={eventos} />
-        </section>
-
-        <section className="rounded-[28px] border border-white/10 bg-[#1b1918] p-6 shadow-[0_10px_30px_rgba(0,0,0,0.24)]">
-          <div className="mb-4">
-            <h2 className="text-xl font-semibold text-white">Skeleton de tabla</h2>
-            <p className="mt-1 text-sm text-zinc-400">
-              Placeholder para estados de carga mientras llegan los eventos del backend.
-            </p>
-          </div>
-          <EventsTableSkeleton />
-        </section>
+        <Suspense fallback={<EventosContentFallback />}>
+          <EventosContent />
+        </Suspense>
       </div>
     </main>
   );
