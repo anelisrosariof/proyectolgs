@@ -2,13 +2,12 @@ import { fetchApi } from "../../lib/api";
 import type { Evento } from "../../lib/types/evento";
 import { formatCurrency } from "../../lib/utils/format-currency";
 import { formatDate } from "../../lib/utils/format-date";
-import { getOccupancyPercent } from "../../lib/utils/get-occupancy-percent";
 
-// NOTE: Phase 6.2 — the page is now an async Server Component fetching real
-// data from `GET /api/eventos`. Phase 6.3/6.4 will remove the mock-only
-// badges (`status`, `location`, `capacity`, `sold`) and rewrite the table
-// with the real columns. Until then, fetched `Evento` records are adapted
-// into the existing display shape so the file type-checks.
+// NOTE: Phase 6.3 — mock-only UI (`status`, `location`, `capacity`, `sold`
+// badges/columns and the occupancy bar) has been removed. The transitional
+// `DisplayEvent` shape now mirrors only fields that exist on the backend
+// `Evento` model. Phase 6.4 will replace this table with the final column
+// layout (Nombre, Tipo, Fecha, Horario, Precio Boleta, Presupuesto, Acciones).
 type DisplayEvent = {
   id: string;
   name: string;
@@ -16,11 +15,8 @@ type DisplayEvent = {
   date: string;
   startTime: string;
   endTime: string;
-  location: string;
-  status: "Activo" | "Planificado" | "Borrador";
-  capacity: number;
-  sold: number;
   price: number;
+  budget: number;
 };
 
 const typeStyles: Record<string, string> = {
@@ -28,12 +24,6 @@ const typeStyles: Record<string, string> = {
   Concierto: "border border-sky-500/30 bg-sky-500/10 text-sky-200",
   "Evento corporativo": "border border-violet-500/30 bg-violet-500/10 text-violet-200",
   Festival: "border border-orange-500/30 bg-orange-500/10 text-orange-200",
-};
-
-const statusStyles: Record<DisplayEvent["status"], string> = {
-  Activo: "border border-emerald-500/40 bg-emerald-500/10 text-emerald-300",
-  Planificado: "border border-amber-500/40 bg-amber-500/10 text-amber-300",
-  Borrador: "border border-zinc-500/40 bg-zinc-500/10 text-zinc-300",
 };
 
 function EventTypeBadge({ type }: { type: string }) {
@@ -46,17 +36,7 @@ function EventTypeBadge({ type }: { type: string }) {
   );
 }
 
-function EventStatusBadge({ status }: { status: DisplayEvent["status"] }) {
-  return (
-    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[status]}`}>
-      {status}
-    </span>
-  );
-}
-
 function EventRow({ event }: { event: DisplayEvent }) {
-  const occupancyPercent = getOccupancyPercent(event.sold, event.capacity);
-
   return (
     <tr className="border-t border-white/10 transition hover:bg-white/[0.03]">
       <td className="px-6 py-4">
@@ -72,27 +52,8 @@ function EventRow({ event }: { event: DisplayEvent }) {
       <td className="px-6 py-4 text-zinc-300">
         {event.startTime} - {event.endTime}
       </td>
-      <td className="px-6 py-4 text-zinc-300">{event.location}</td>
       <td className="px-6 py-4 text-zinc-300">{formatCurrency(event.price)}</td>
-      <td className="px-6 py-4 text-zinc-300">
-        <div className="space-y-2">
-          <div className="flex items-center justify-between gap-3 text-xs">
-            <span>
-              {event.sold}/{event.capacity}
-            </span>
-            <span className="font-semibold text-[#d4af37]">{occupancyPercent}%</span>
-          </div>
-          <div className="h-2 w-32 rounded-full bg-white/10">
-            <div
-              className="h-2 rounded-full bg-[#b88a2f]"
-              style={{ width: `${occupancyPercent}%` }}
-            />
-          </div>
-        </div>
-      </td>
-      <td className="px-6 py-4">
-        <EventStatusBadge status={event.status} />
-      </td>
+      <td className="px-6 py-4 text-zinc-300">{formatCurrency(event.budget)}</td>
       <td className="px-6 py-4">
         <div className="flex flex-wrap gap-2">
           <button className="rounded-full border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold text-zinc-200 transition hover:bg-white/10">
@@ -120,10 +81,8 @@ function EventsTable({ events }: { events: DisplayEvent[] }) {
             <th className="px-6 py-4 font-semibold">Tipo</th>
             <th className="px-6 py-4 font-semibold">Fecha</th>
             <th className="px-6 py-4 font-semibold">Horario</th>
-            <th className="px-6 py-4 font-semibold">Ubicación</th>
-            <th className="px-6 py-4 font-semibold">Precio</th>
-            <th className="px-6 py-4 font-semibold">Ocupación</th>
-            <th className="px-6 py-4 font-semibold">Estado</th>
+            <th className="px-6 py-4 font-semibold">Precio Boleta</th>
+            <th className="px-6 py-4 font-semibold">Presupuesto</th>
             <th className="px-6 py-4 font-semibold">Acciones</th>
           </tr>
         </thead>
@@ -147,10 +106,8 @@ function EventsTableSkeleton() {
             <th className="px-6 py-4 font-semibold">Tipo</th>
             <th className="px-6 py-4 font-semibold">Fecha</th>
             <th className="px-6 py-4 font-semibold">Horario</th>
-            <th className="px-6 py-4 font-semibold">Ubicación</th>
-            <th className="px-6 py-4 font-semibold">Precio</th>
-            <th className="px-6 py-4 font-semibold">Ocupación</th>
-            <th className="px-6 py-4 font-semibold">Estado</th>
+            <th className="px-6 py-4 font-semibold">Precio Boleta</th>
+            <th className="px-6 py-4 font-semibold">Presupuesto</th>
             <th className="px-6 py-4 font-semibold">Acciones</th>
           </tr>
         </thead>
@@ -173,19 +130,10 @@ function EventsTableSkeleton() {
                 <div className="h-4 w-24 animate-pulse rounded bg-white/10" />
               </td>
               <td className="px-6 py-4">
-                <div className="h-4 w-28 animate-pulse rounded bg-white/10" />
-              </td>
-              <td className="px-6 py-4">
                 <div className="h-4 w-20 animate-pulse rounded bg-white/10" />
               </td>
               <td className="px-6 py-4">
-                <div className="space-y-2">
-                  <div className="h-4 w-24 animate-pulse rounded bg-white/10" />
-                  <div className="h-2 w-32 animate-pulse rounded-full bg-white/10" />
-                </div>
-              </td>
-              <td className="px-6 py-4">
-                <div className="h-7 w-24 animate-pulse rounded-full bg-white/10" />
+                <div className="h-4 w-24 animate-pulse rounded bg-white/10" />
               </td>
               <td className="px-6 py-4">
                 <div className="flex gap-2">
@@ -203,10 +151,10 @@ function EventsTableSkeleton() {
 }
 
 /**
- * Adapts a real backend `Evento` into the transitional `DisplayEvent` shape
- * consumed by the current table. Fields that don't exist on the backend
- * (`location`, `capacity`, `sold`, `status`) get placeholder values; they
- * will be removed entirely in Phase 6.3 when the mock-only UI is deleted.
+ * Adapts a real backend `Evento` into the transitional `DisplayEvent` shape.
+ * After Phase 6.3 this only carries fields that actually exist on the backend
+ * model. Phase 6.4 will drop this intermediate shape entirely and consume
+ * `Evento` directly in the rewritten table.
  */
 function toDisplayEvent(evento: Evento): DisplayEvent {
   return {
@@ -216,11 +164,8 @@ function toDisplayEvent(evento: Evento): DisplayEvent {
     date: evento.fechaEvento,
     startTime: evento.horaInicio,
     endTime: evento.horaFin,
-    location: "—",
-    status: "Planificado",
-    capacity: 0,
-    sold: 0,
     price: evento.precioBoleta,
+    budget: evento.presupuesto,
   };
 }
 
@@ -229,9 +174,12 @@ export default async function EventosPage() {
   const displayEvents = eventos.map(toDisplayEvent);
 
   const totalEvents = displayEvents.length;
-  const activeEvents = displayEvents.filter((event) => event.status === "Activo").length;
-  const plannedEvents = displayEvents.filter((event) => event.status === "Planificado").length;
-  const totalTicketsSold = displayEvents.reduce((sum, event) => sum + event.sold, 0);
+  const uniqueTypes = new Set(displayEvents.map((event) => event.type)).size;
+  const totalBudget = displayEvents.reduce((sum, event) => sum + event.budget, 0);
+  const averageTicketPrice =
+    totalEvents === 0
+      ? 0
+      : displayEvents.reduce((sum, event) => sum + event.price, 0) / totalEvents;
 
   return (
     <main className="min-h-screen bg-[#161515] px-6 py-8 text-white md:px-10">
@@ -246,8 +194,8 @@ export default async function EventosPage() {
                 Lista de Eventos
               </h1>
               <p className="mt-2 max-w-2xl text-sm text-zinc-300 md:text-base">
-                Consulta los eventos registrados, su estado, capacidad, ocupación y acciones
-                principales del CRUD.
+                Consulta los eventos registrados, su tipo, horario, precio de boleta y
+                presupuesto asignado.
               </p>
             </div>
 
@@ -262,22 +210,23 @@ export default async function EventosPage() {
           </div>
         </section>
 
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           <article className="rounded-2xl border border-white/10 bg-[#1c1b1a] p-5 shadow-sm">
             <p className="text-sm text-zinc-400">Total de eventos</p>
             <p className="mt-3 text-3xl font-bold text-white">{totalEvents}</p>
           </article>
           <article className="rounded-2xl border border-white/10 bg-[#1c1b1a] p-5 shadow-sm">
-            <p className="text-sm text-zinc-400">Eventos activos</p>
-            <p className="mt-3 text-3xl font-bold text-white">{activeEvents}</p>
+            <p className="text-sm text-zinc-400">Tipos distintos</p>
+            <p className="mt-3 text-3xl font-bold text-white">{uniqueTypes}</p>
           </article>
           <article className="rounded-2xl border border-white/10 bg-[#1c1b1a] p-5 shadow-sm">
-            <p className="text-sm text-zinc-400">Planificados</p>
-            <p className="mt-3 text-3xl font-bold text-white">{plannedEvents}</p>
-          </article>
-          <article className="rounded-2xl border border-white/10 bg-[#1c1b1a] p-5 shadow-sm">
-            <p className="text-sm text-zinc-400">Boletas vendidas</p>
-            <p className="mt-3 text-3xl font-bold text-white">{totalTicketsSold}</p>
+            <p className="text-sm text-zinc-400">Presupuesto total</p>
+            <p className="mt-3 text-3xl font-bold text-white">
+              {formatCurrency(totalBudget)}
+            </p>
+            <p className="mt-1 text-xs text-zinc-500">
+              Precio boleta promedio: {formatCurrency(averageTicketPrice)}
+            </p>
           </article>
         </section>
 
@@ -296,12 +245,6 @@ export default async function EventosPage() {
                 placeholder="Buscar evento..."
                 type="text"
               />
-              <select className="rounded-xl border border-[#4a3e2a] bg-[#25211d] px-4 py-3 text-sm text-white outline-none transition focus:border-[#a57c2d]">
-                <option>Todos los estados</option>
-                <option>Activo</option>
-                <option>Planificado</option>
-                <option>Borrador</option>
-              </select>
             </div>
           </div>
 
