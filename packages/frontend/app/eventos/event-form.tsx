@@ -1,30 +1,55 @@
 "use client";
 
+import { TipoEvento } from "../../lib/types/evento";
+
 type EventFormProps = {
   mode?: "create" | "edit";
   submitLabel?: string;
   initialValues?: {
-    name?: string;
-    type?: string;
-    date?: string;
-    startTime?: string;
-    endTime?: string;
-    location?: string;
-    status?: string;
-    capacity?: number;
-    price?: number;
-    description?: string;
+    nombre?: string;
+    descripcion?: string | null;
+    tipo?: TipoEvento | "";
+    fechaEvento?: string;
+    horaInicio?: string;
+    horaFin?: string;
+    presupuesto?: number;
+    precioBoleta?: number;
+    ingresoReal?: number;
+    gastoReal?: number;
   };
 };
 
-const eventTypes = [
-  "Concierto",
-  "Festival",
-  "Fiesta temática",
-  "Evento corporativo",
+const tipoEventoOptions: Array<{ value: TipoEvento; label: string }> = [
+  { value: TipoEvento.CONCIERTO, label: "Concierto" },
+  { value: TipoEvento.FIESTA_TEMATICA, label: "Fiesta temática" },
+  { value: TipoEvento.ESPECTACULO, label: "Espectáculo" },
+  { value: TipoEvento.CORPORATIVO, label: "Corporativo" },
+  { value: TipoEvento.BODA, label: "Boda" },
+  { value: TipoEvento.CUMPLEANOS, label: "Cumpleaños" },
+  { value: TipoEvento.OTRO, label: "Otro" },
 ];
 
-const eventStatuses = ["Activo", "Planificado", "Borrador"];
+const inputClass =
+  "w-full rounded-xl border border-[#4a3e2a] bg-[#25211d] px-4 py-3 text-sm text-white outline-none transition placeholder:text-zinc-500 focus:border-[#a57c2d]";
+
+const labelClass = "mb-2 block text-sm font-medium text-zinc-300";
+
+/**
+ * Format a number for use as an `<input type="number">` defaultValue.
+ * Returns an empty string for `undefined` so the placeholder can show.
+ */
+function numberDefault(value: number | undefined): string {
+  return value === undefined || Number.isNaN(value) ? "" : String(value);
+}
+
+/**
+ * Normalize a backend time string (e.g. `"20:00:00"`) into the `"HH:mm"` form
+ * that `<input type="time">` expects.
+ */
+function timeDefault(value: string | undefined): string {
+  if (!value) return "";
+  return value.slice(0, 5);
+}
 
 export function EventForm({
   mode = "create",
@@ -41,7 +66,9 @@ export function EventForm({
         <p className="text-sm font-medium uppercase tracking-[0.25em] text-[#b88a2f]">
           Luxury Grand Stage
         </p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight text-white">{title}</h1>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight text-white">
+          {title}
+        </h1>
         <p className="mt-2 text-sm text-zinc-400">
           Completa la información principal del evento dentro del sistema.
         </p>
@@ -49,128 +76,172 @@ export function EventForm({
 
       <form className="space-y-6">
         <div className="grid gap-5 md:grid-cols-2">
+          {/* Nombre — required, full width */}
           <div className="md:col-span-2">
-            <label className="mb-2 block text-sm font-medium text-zinc-300">
-              Nombre del evento
+            <label className={labelClass} htmlFor="nombre">
+              Nombre del evento <span className="text-[#c5a55a]">*</span>
             </label>
             <input
-              defaultValue={initialValues.name ?? ""}
+              id="nombre"
+              name="nombre"
+              type="text"
+              required
+              defaultValue={initialValues.nombre ?? ""}
               placeholder="Ej. Noche de Salsa"
-              className="w-full rounded-xl border border-[#4a3e2a] bg-[#25211d] px-4 py-3 text-sm text-white outline-none transition placeholder:text-zinc-500 focus:border-[#a57c2d]"
+              className={inputClass}
             />
           </div>
 
+          {/* Tipo — required select */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-zinc-300">
-              Tipo de evento
+            <label className={labelClass} htmlFor="tipo">
+              Tipo de evento <span className="text-[#c5a55a]">*</span>
             </label>
             <select
-              defaultValue={initialValues.type ?? ""}
-              className="w-full rounded-xl border border-[#4a3e2a] bg-[#25211d] px-4 py-3 text-sm text-white outline-none transition focus:border-[#a57c2d]"
+              id="tipo"
+              name="tipo"
+              required
+              defaultValue={initialValues.tipo ?? ""}
+              className={inputClass}
             >
-              <option value="">Seleccione un tipo</option>
-              {eventTypes.map((type) => (
-                <option key={type} value={type}>
-                  {type}
+              <option value="" disabled>
+                Seleccione un tipo
+              </option>
+              {tipoEventoOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
                 </option>
               ))}
             </select>
           </div>
 
+          {/* Fecha del evento */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-zinc-300">
-              Estado
-            </label>
-            <select
-              defaultValue={initialValues.status ?? ""}
-              className="w-full rounded-xl border border-[#4a3e2a] bg-[#25211d] px-4 py-3 text-sm text-white outline-none transition focus:border-[#a57c2d]"
-            >
-              <option value="">Seleccione un estado</option>
-              {eventStatuses.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-zinc-300">
-              Fecha
+            <label className={labelClass} htmlFor="fechaEvento">
+              Fecha del evento <span className="text-[#c5a55a]">*</span>
             </label>
             <input
+              id="fechaEvento"
+              name="fechaEvento"
               type="date"
-              defaultValue={initialValues.date ?? ""}
-              className="w-full rounded-xl border border-[#4a3e2a] bg-[#25211d] px-4 py-3 text-sm text-white outline-none transition focus:border-[#a57c2d]"
+              required
+              defaultValue={initialValues.fechaEvento ?? ""}
+              className={inputClass}
             />
           </div>
 
+          {/* Hora inicio */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-zinc-300">
-              Hora de inicio
+            <label className={labelClass} htmlFor="horaInicio">
+              Hora de inicio <span className="text-[#c5a55a]">*</span>
             </label>
             <input
+              id="horaInicio"
+              name="horaInicio"
               type="time"
-              defaultValue={initialValues.startTime ?? ""}
-              className="w-full rounded-xl border border-[#4a3e2a] bg-[#25211d] px-4 py-3 text-sm text-white outline-none transition focus:border-[#a57c2d]"
+              required
+              defaultValue={timeDefault(initialValues.horaInicio)}
+              className={inputClass}
             />
           </div>
 
+          {/* Hora fin */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-zinc-300">
-              Hora de fin
+            <label className={labelClass} htmlFor="horaFin">
+              Hora de fin <span className="text-[#c5a55a]">*</span>
             </label>
             <input
+              id="horaFin"
+              name="horaFin"
               type="time"
-              defaultValue={initialValues.endTime ?? ""}
-              className="w-full rounded-xl border border-[#4a3e2a] bg-[#25211d] px-4 py-3 text-sm text-white outline-none transition focus:border-[#a57c2d]"
+              required
+              defaultValue={timeDefault(initialValues.horaFin)}
+              className={inputClass}
             />
           </div>
 
+          {/* Precio boleta — required */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-zinc-300">
-              Ubicación
+            <label className={labelClass} htmlFor="precioBoleta">
+              Precio de boleta <span className="text-[#c5a55a]">*</span>
             </label>
             <input
-              defaultValue={initialValues.location ?? ""}
-              placeholder="Ej. Salón Principal"
-              className="w-full rounded-xl border border-[#4a3e2a] bg-[#25211d] px-4 py-3 text-sm text-white outline-none transition placeholder:text-zinc-500 focus:border-[#a57c2d]"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-zinc-300">
-              Capacidad
-            </label>
-            <input
+              id="precioBoleta"
+              name="precioBoleta"
               type="number"
-              defaultValue={initialValues.capacity ?? ""}
-              placeholder="Ej. 250"
-              className="w-full rounded-xl border border-[#4a3e2a] bg-[#25211d] px-4 py-3 text-sm text-white outline-none transition placeholder:text-zinc-500 focus:border-[#a57c2d]"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-zinc-300">
-              Precio por entrada
-            </label>
-            <input
-              type="number"
-              defaultValue={initialValues.price ?? ""}
+              required
+              min="0"
+              step="0.01"
+              defaultValue={numberDefault(initialValues.precioBoleta)}
               placeholder="Ej. 1500"
-              className="w-full rounded-xl border border-[#4a3e2a] bg-[#25211d] px-4 py-3 text-sm text-white outline-none transition placeholder:text-zinc-500 focus:border-[#a57c2d]"
+              className={inputClass}
             />
           </div>
 
+          {/* Presupuesto — required */}
+          <div>
+            <label className={labelClass} htmlFor="presupuesto">
+              Presupuesto <span className="text-[#c5a55a]">*</span>
+            </label>
+            <input
+              id="presupuesto"
+              name="presupuesto"
+              type="number"
+              required
+              min="0"
+              step="0.01"
+              defaultValue={numberDefault(initialValues.presupuesto)}
+              placeholder="Ej. 50000"
+              className={inputClass}
+            />
+          </div>
+
+          {/* Ingreso real — optional, default 0 */}
+          <div>
+            <label className={labelClass} htmlFor="ingresoReal">
+              Ingreso real
+            </label>
+            <input
+              id="ingresoReal"
+              name="ingresoReal"
+              type="number"
+              min="0"
+              step="0.01"
+              defaultValue={numberDefault(initialValues.ingresoReal ?? 0)}
+              placeholder="0.00"
+              className={inputClass}
+            />
+          </div>
+
+          {/* Gasto real — optional, default 0 */}
+          <div>
+            <label className={labelClass} htmlFor="gastoReal">
+              Gasto real
+            </label>
+            <input
+              id="gastoReal"
+              name="gastoReal"
+              type="number"
+              min="0"
+              step="0.01"
+              defaultValue={numberDefault(initialValues.gastoReal ?? 0)}
+              placeholder="0.00"
+              className={inputClass}
+            />
+          </div>
+
+          {/* Descripción — optional, full width */}
           <div className="md:col-span-2">
-            <label className="mb-2 block text-sm font-medium text-zinc-300">
+            <label className={labelClass} htmlFor="descripcion">
               Descripción
             </label>
             <textarea
+              id="descripcion"
+              name="descripcion"
               rows={5}
-              defaultValue={initialValues.description ?? ""}
+              defaultValue={initialValues.descripcion ?? ""}
               placeholder="Describe brevemente el evento..."
-              className="w-full rounded-xl border border-[#4a3e2a] bg-[#25211d] px-4 py-3 text-sm text-white outline-none transition placeholder:text-zinc-500 focus:border-[#a57c2d]"
+              className={inputClass}
             />
           </div>
         </div>
