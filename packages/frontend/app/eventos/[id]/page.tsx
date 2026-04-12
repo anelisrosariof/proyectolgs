@@ -5,6 +5,7 @@ import { ApiError, fetchApi } from "../../../lib/api";
 import { TipoEvento, type Evento } from "../../../lib/types/evento";
 import { formatCurrency } from "../../../lib/utils/format-currency";
 import { formatDate } from "../../../lib/utils/format-date";
+import { DeleteEventButton } from "../delete-event-button";
 
 const tipoEventoLabels: Record<TipoEvento, string> = {
   [TipoEvento.CONCIERTO]: "Concierto",
@@ -118,13 +119,12 @@ export default async function EventDetailPage({
               >
                 Editar Evento
               </Link>
-              <button
-                type="button"
-                disabled
-                className="cursor-not-allowed rounded-xl border border-rose-500/30 bg-rose-500/10 px-5 py-3 text-sm font-semibold text-rose-300 opacity-60"
-              >
-                Eliminar
-              </button>
+              <DeleteEventButton
+                eventoId={evento.idEvento}
+                eventoNombre={evento.nombre}
+                variant="detail"
+                redirectTo="/eventos"
+              />
             </div>
           </div>
         </section>

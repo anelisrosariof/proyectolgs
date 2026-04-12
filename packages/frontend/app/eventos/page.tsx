@@ -1,8 +1,10 @@
+import Link from "next/link";
 import { Suspense } from "react";
 import { fetchApi } from "../../lib/api";
 import { TipoEvento, type Evento } from "../../lib/types/evento";
 import { formatCurrency } from "../../lib/utils/format-currency";
 import { formatDate } from "../../lib/utils/format-date";
+import { DeleteEventButton } from "./delete-event-button";
 
 const tipoEventoLabels: Record<TipoEvento, string> = {
   [TipoEvento.CONCIERTO]: "Concierto",
@@ -66,15 +68,22 @@ function EventRow({ evento }: { evento: Evento }) {
       <td className="px-6 py-4 text-zinc-300">{formatCurrency(evento.presupuesto)}</td>
       <td className="px-6 py-4">
         <div className="flex flex-wrap gap-2">
-          <button className="rounded-full border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold text-zinc-200 transition hover:bg-white/10">
+          <Link
+            href={`/eventos/${evento.idEvento}`}
+            className="rounded-full border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold text-zinc-200 transition hover:bg-white/10"
+          >
             Ver
-          </button>
-          <button className="rounded-full border border-[#b88a2f]/40 bg-[#b88a2f]/10 px-3 py-2 text-xs font-semibold text-[#f1d48a] transition hover:bg-[#b88a2f]/20">
+          </Link>
+          <Link
+            href={`/eventos/${evento.idEvento}/editar`}
+            className="rounded-full border border-[#b88a2f]/40 bg-[#b88a2f]/10 px-3 py-2 text-xs font-semibold text-[#f1d48a] transition hover:bg-[#b88a2f]/20"
+          >
             Editar
-          </button>
-          <button className="rounded-full border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-300 transition hover:bg-rose-500/20">
-            Eliminar
-          </button>
+          </Link>
+          <DeleteEventButton
+            eventoId={evento.idEvento}
+            eventoNombre={evento.nombre}
+          />
         </div>
       </td>
     </tr>
