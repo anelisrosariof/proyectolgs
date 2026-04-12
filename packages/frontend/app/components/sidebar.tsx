@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -10,6 +11,7 @@ import {
   Home,
   Ticket,
 } from "lucide-react";
+import logo from "../lgs_logo512.png";
 
 type NavItem = {
   label: string;
@@ -37,10 +39,15 @@ export function Sidebar() {
 
   return (
     <aside className="flex h-screen w-55 flex-col border-r border-[#1f1f1f] bg-[#111111] text-[#ededed]">
-      <div className="flex flex-col items-center gap-2 px-6 py-8">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-[#c5a55a] text-2xl font-bold text-[#c5a55a]">
-          L
-        </div>
+      <div className="flex flex-col items-center gap-2 px-6 py-6">
+        <Image
+          src={logo}
+          alt="Luxury Grand Stage"
+          width={72}
+          height={72}
+          className="h-auto w-auto object-contain drop-shadow-[0_0_10px_rgba(197,165,90,0.3)]"
+          priority
+        />
         <p className="text-center text-sm font-semibold uppercase tracking-[0.2em] text-[#c5a55a]">
           Luxury
         </p>
