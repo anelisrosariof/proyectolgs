@@ -1,10 +1,15 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { useState, useTransition, type FormEvent } from "react";
+
+import { ApiError, fetchApi } from "../../lib/api";
 import { TipoEvento } from "../../lib/types/evento";
 
 type EventFormProps = {
   mode?: "create" | "edit";
   submitLabel?: string;
+  eventoId?: string;
   initialValues?: {
     nombre?: string;
     descripcion?: string | null;
@@ -18,6 +23,41 @@ type EventFormProps = {
     gastoReal?: number;
   };
 };
+
+/**
+ * Shape of the payload posted to the backend. Matches `CreateEventoDto` on the
+ * NestJS side — numbers are real numbers, `descripcion` is optional, and
+ * `fechaEvento`/`horaInicio`/`horaFin` are ISO-ish strings.
+ */
+type EventoPayload = {
+  nombre: string;
+  descripcion?: string;
+  tipo: TipoEvento;
+  fechaEvento: string;
+  horaInicio: string;
+  horaFin: string;
+  presupuesto: number;
+  precioBoleta: number;
+  ingresoReal: number;
+  gastoReal: number;
+};
+
+function parseFormData(formData: FormData): EventoPayload {
+  const rawDescripcion = (formData.get("descripcion") ?? "").toString().trim();
+
+  return {
+    nombre: (formData.get("nombre") ?? "").toString(),
+    descripcion: rawDescripcion === "" ? undefined : rawDescripcion,
+    tipo: (formData.get("tipo") ?? "").toString() as TipoEvento,
+    fechaEvento: (formData.get("fechaEvento") ?? "").toString(),
+    horaInicio: (formData.get("horaInicio") ?? "").toString(),
+    horaFin: (formData.get("horaFin") ?? "").toString(),
+    presupuesto: Number(formData.get("presupuesto") ?? 0),
+    precioBoleta: Number(formData.get("precioBoleta") ?? 0),
+    ingresoReal: Number(formData.get("ingresoReal") ?? 0),
+    gastoReal: Number(formData.get("gastoReal") ?? 0),
+  };
+}
 
 const tipoEventoOptions: Array<{ value: TipoEvento; label: string }> = [
   { value: TipoEvento.CONCIERTO, label: "Concierto" },
@@ -54,11 +94,62 @@ function timeDefault(value: string | undefined): string {
 export function EventForm({
   mode = "create",
   submitLabel,
+  eventoId,
   initialValues = {},
 }: EventFormProps) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   const title = mode === "edit" ? "Editar Evento" : "Nuevo Evento";
-  const buttonText =
-    submitLabel ?? (mode === "edit" ? "Guardar Cambios" : "Crear Evento");
+  const defaultLabel = mode === "edit" ? "Guardar Cambios" : "Crear Evento";
+  const buttonText = isPending
+    ? "Guardando..."
+    : (submitLabel ?? defaultLabel);
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setErrorMessage(null);
+
+    const payload = parseFormData(new FormData(event.currentTarget));
+
+    startTransition(async () => {
+      try {
+        if (mode === "edit") {
+          if (!eventoId) {
+            throw new Error(
+              "EventForm en modo 'edit' requiere la prop eventoId.",
+            );
+          }
+          await fetchApi(`/eventos/${eventoId}`, {
+            method: "PATCH",
+            body: payload,
+          });
+        } else {
+          await fetchApi("/eventos", {
+            method: "POST",
+            body: payload,
+          });
+        }
+
+        router.refresh();
+      } catch (error) {
+        if (error instanceof ApiError) {
+          setErrorMessage(error.message);
+          return;
+        }
+        setErrorMessage(
+          error instanceof Error
+            ? error.message
+            : "Ocurrió un error inesperado al guardar el evento.",
+        );
+      }
+    });
+  }
+
+  function handleCancel() {
+    router.back();
+  }
 
   return (
     <section className="rounded-[28px] border border-white/10 bg-[#1b1918] p-6 shadow-[0_10px_30px_rgba(0,0,0,0.24)]">
@@ -74,7 +165,16 @@ export function EventForm({
         </p>
       </div>
 
-      <form className="space-y-6">
+      <form className="space-y-6" onSubmit={handleSubmit} noValidate>
+        {errorMessage ? (
+          <div
+            role="alert"
+            className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200"
+          >
+            {errorMessage}
+          </div>
+        ) : null}
+
         <div className="grid gap-5 md:grid-cols-2">
           {/* Nombre — required, full width */}
           <div className="md:col-span-2">
@@ -249,13 +349,16 @@ export function EventForm({
         <div className="flex flex-col gap-3 border-t border-white/10 pt-5 sm:flex-row sm:justify-end">
           <button
             type="button"
-            className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-zinc-200 transition hover:bg-white/10"
+            onClick={handleCancel}
+            disabled={isPending}
+            className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-zinc-200 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
           >
             Cancelar
           </button>
           <button
             type="submit"
-            className="rounded-xl bg-[#a57c2d] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#8d6925]"
+            disabled={isPending}
+            className="rounded-xl bg-[#a57c2d] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#8d6925] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {buttonText}
           </button>
