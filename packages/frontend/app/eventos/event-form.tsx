@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  createEventoSchema,
+  updateEventoSchema,
+} from "@luxury-grand-stage/core";
 import { useRouter } from "next/navigation";
 import { useState, useTransition, type FormEvent } from "react";
 
@@ -32,7 +36,7 @@ type EventFormProps = {
 type EventoPayload = {
   nombre: string;
   descripcion?: string;
-  tipo: TipoEvento;
+  tipo: TipoEvento | "";
   fechaEvento: string;
   horaInicio: string;
   horaFin: string;
@@ -42,13 +46,19 @@ type EventoPayload = {
   gastoReal: number;
 };
 
+/**
+ * Map of per-field validation errors keyed by the DTO field name. Only fields
+ * that currently have an error are present.
+ */
+type FieldErrors = Partial<Record<keyof EventoPayload, string>>;
+
 function parseFormData(formData: FormData): EventoPayload {
   const rawDescripcion = (formData.get("descripcion") ?? "").toString().trim();
 
   return {
     nombre: (formData.get("nombre") ?? "").toString(),
     descripcion: rawDescripcion === "" ? undefined : rawDescripcion,
-    tipo: (formData.get("tipo") ?? "").toString() as TipoEvento,
+    tipo: (formData.get("tipo") ?? "").toString() as TipoEvento | "",
     fechaEvento: (formData.get("fechaEvento") ?? "").toString(),
     horaInicio: (formData.get("horaInicio") ?? "").toString(),
     horaFin: (formData.get("horaFin") ?? "").toString(),
@@ -69,8 +79,16 @@ const tipoEventoOptions: Array<{ value: TipoEvento; label: string }> = [
   { value: TipoEvento.OTRO, label: "Otro" },
 ];
 
-const inputClass =
-  "w-full rounded-xl border border-[#4a3e2a] bg-[#25211d] px-4 py-3 text-sm text-white outline-none transition placeholder:text-zinc-500 focus:border-[#a57c2d]";
+const baseInputClass =
+  "w-full rounded-xl border bg-[#25211d] px-4 py-3 text-sm text-white outline-none transition placeholder:text-zinc-500";
+
+const validInputClass = "border-[#4a3e2a] focus:border-[#a57c2d]";
+
+const invalidInputClass = "border-red-500/70 focus:border-red-400";
+
+function inputClassName(hasError: boolean): string {
+  return `${baseInputClass} ${hasError ? invalidInputClass : validInputClass}`;
+}
 
 const labelClass = "mb-2 block text-sm font-medium text-zinc-300";
 
@@ -91,6 +109,15 @@ function timeDefault(value: string | undefined): string {
   return value.slice(0, 5);
 }
 
+/**
+ * Small inline error helper — renders a short red message under an input
+ * when that field has a validation error.
+ */
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return <p className="mt-1 text-xs text-red-400">{message}</p>;
+}
+
 export function EventForm({
   mode = "create",
   submitLabel,
@@ -100,6 +127,7 @@ export function EventForm({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
   const title = mode === "edit" ? "Editar Evento" : "Nuevo Evento";
   const defaultLabel = mode === "edit" ? "Guardar Cambios" : "Crear Evento";
@@ -113,6 +141,26 @@ export function EventForm({
 
     const payload = parseFormData(new FormData(event.currentTarget));
 
+    // Client-side validation with the Zod schemas from @luxury-grand-stage/core.
+    // In `edit` mode we run the partial schema so empty optional fields are OK.
+    const schema = mode === "edit" ? updateEventoSchema : createEventoSchema;
+    const result = schema.safeParse(payload);
+
+    if (!result.success) {
+      const nextErrors: FieldErrors = {};
+      for (const issue of result.error.issues) {
+        const key = issue.path[0];
+        if (typeof key === "string" && !(key in nextErrors)) {
+          nextErrors[key as keyof EventoPayload] = issue.message;
+        }
+      }
+      setFieldErrors(nextErrors);
+      return;
+    }
+
+    // Clear stale field errors once the payload parses cleanly.
+    setFieldErrors({});
+
     startTransition(async () => {
       try {
         if (mode === "edit") {
@@ -123,16 +171,18 @@ export function EventForm({
           }
           await fetchApi(`/eventos/${eventoId}`, {
             method: "PATCH",
-            body: payload,
+            body: result.data,
           });
+          router.refresh();
+          router.push(`/eventos/${eventoId}`);
         } else {
           await fetchApi("/eventos", {
             method: "POST",
-            body: payload,
+            body: result.data,
           });
+          router.refresh();
+          router.push("/eventos");
         }
-
-        router.refresh();
       } catch (error) {
         if (error instanceof ApiError) {
           setErrorMessage(error.message);
@@ -188,8 +238,10 @@ export function EventForm({
               required
               defaultValue={initialValues.nombre ?? ""}
               placeholder="Ej. Noche de Salsa"
-              className={inputClass}
+              aria-invalid={fieldErrors.nombre ? true : undefined}
+              className={inputClassName(Boolean(fieldErrors.nombre))}
             />
+            <FieldError message={fieldErrors.nombre} />
           </div>
 
           {/* Tipo — required select */}
@@ -202,7 +254,8 @@ export function EventForm({
               name="tipo"
               required
               defaultValue={initialValues.tipo ?? ""}
-              className={inputClass}
+              aria-invalid={fieldErrors.tipo ? true : undefined}
+              className={inputClassName(Boolean(fieldErrors.tipo))}
             >
               <option value="" disabled>
                 Seleccione un tipo
@@ -213,6 +266,7 @@ export function EventForm({
                 </option>
               ))}
             </select>
+            <FieldError message={fieldErrors.tipo} />
           </div>
 
           {/* Fecha del evento */}
@@ -226,8 +280,10 @@ export function EventForm({
               type="date"
               required
               defaultValue={initialValues.fechaEvento ?? ""}
-              className={inputClass}
+              aria-invalid={fieldErrors.fechaEvento ? true : undefined}
+              className={inputClassName(Boolean(fieldErrors.fechaEvento))}
             />
+            <FieldError message={fieldErrors.fechaEvento} />
           </div>
 
           {/* Hora inicio */}
@@ -241,8 +297,10 @@ export function EventForm({
               type="time"
               required
               defaultValue={timeDefault(initialValues.horaInicio)}
-              className={inputClass}
+              aria-invalid={fieldErrors.horaInicio ? true : undefined}
+              className={inputClassName(Boolean(fieldErrors.horaInicio))}
             />
+            <FieldError message={fieldErrors.horaInicio} />
           </div>
 
           {/* Hora fin */}
@@ -256,8 +314,10 @@ export function EventForm({
               type="time"
               required
               defaultValue={timeDefault(initialValues.horaFin)}
-              className={inputClass}
+              aria-invalid={fieldErrors.horaFin ? true : undefined}
+              className={inputClassName(Boolean(fieldErrors.horaFin))}
             />
+            <FieldError message={fieldErrors.horaFin} />
           </div>
 
           {/* Precio boleta — required */}
@@ -274,8 +334,10 @@ export function EventForm({
               step="0.01"
               defaultValue={numberDefault(initialValues.precioBoleta)}
               placeholder="Ej. 1500"
-              className={inputClass}
+              aria-invalid={fieldErrors.precioBoleta ? true : undefined}
+              className={inputClassName(Boolean(fieldErrors.precioBoleta))}
             />
+            <FieldError message={fieldErrors.precioBoleta} />
           </div>
 
           {/* Presupuesto — required */}
@@ -292,8 +354,10 @@ export function EventForm({
               step="0.01"
               defaultValue={numberDefault(initialValues.presupuesto)}
               placeholder="Ej. 50000"
-              className={inputClass}
+              aria-invalid={fieldErrors.presupuesto ? true : undefined}
+              className={inputClassName(Boolean(fieldErrors.presupuesto))}
             />
+            <FieldError message={fieldErrors.presupuesto} />
           </div>
 
           {/* Ingreso real — optional, default 0 */}
@@ -309,8 +373,10 @@ export function EventForm({
               step="0.01"
               defaultValue={numberDefault(initialValues.ingresoReal ?? 0)}
               placeholder="0.00"
-              className={inputClass}
+              aria-invalid={fieldErrors.ingresoReal ? true : undefined}
+              className={inputClassName(Boolean(fieldErrors.ingresoReal))}
             />
+            <FieldError message={fieldErrors.ingresoReal} />
           </div>
 
           {/* Gasto real — optional, default 0 */}
@@ -326,8 +392,10 @@ export function EventForm({
               step="0.01"
               defaultValue={numberDefault(initialValues.gastoReal ?? 0)}
               placeholder="0.00"
-              className={inputClass}
+              aria-invalid={fieldErrors.gastoReal ? true : undefined}
+              className={inputClassName(Boolean(fieldErrors.gastoReal))}
             />
+            <FieldError message={fieldErrors.gastoReal} />
           </div>
 
           {/* Descripción — optional, full width */}
@@ -341,8 +409,10 @@ export function EventForm({
               rows={5}
               defaultValue={initialValues.descripcion ?? ""}
               placeholder="Describe brevemente el evento..."
-              className={inputClass}
+              aria-invalid={fieldErrors.descripcion ? true : undefined}
+              className={inputClassName(Boolean(fieldErrors.descripcion))}
             />
+            <FieldError message={fieldErrors.descripcion} />
           </div>
         </div>
 

@@ -1,100 +1,51 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
+
+import { ApiError, fetchApi } from "../../../lib/api";
+import { TipoEvento, type Evento } from "../../../lib/types/evento";
 import { formatCurrency } from "../../../lib/utils/format-currency";
 import { formatDate } from "../../../lib/utils/format-date";
-import { getOccupancyPercent } from "../../../lib/utils/get-occupancy-percent";
 
-const events = [
-  {
-    id: "EVT-001",
-    name: "Noche de Salsa",
-    type: "Fiesta temática",
-    date: "2026-04-18",
-    startTime: "20:00",
-    endTime: "23:30",
-    location: "Salón Principal",
-    status: "Planificado",
-    capacity: 250,
-    sold: 180,
-    price: 1500,
-    description:
-      "Evento temático con música en vivo, ambientación especial y venta de boletas por zona.",
-  },
-  {
-    id: "EVT-002",
-    name: "Concierto Acústico",
-    type: "Concierto",
-    date: "2026-04-22",
-    startTime: "19:00",
-    endTime: "22:00",
-    location: "Terraza",
-    status: "Activo",
-    capacity: 120,
-    sold: 96,
-    price: 2000,
-    description:
-      "Presentación acústica con cupos limitados, zona general y experiencia íntima para el público.",
-  },
-  {
-    id: "EVT-003",
-    name: "After Office Premium",
-    type: "Evento corporativo",
-    date: "2026-04-25",
-    startTime: "18:30",
-    endTime: "22:30",
-    location: "Área VIP",
-    status: "Planificado",
-    capacity: 80,
-    sold: 54,
-    price: 2500,
-    description:
-      "Actividad corporativa enfocada en networking, música ambiental y catering premium.",
-  },
-  {
-    id: "EVT-004",
-    name: "Festival Urbano",
-    type: "Festival",
-    date: "2026-05-02",
-    startTime: "17:00",
-    endTime: "23:59",
-    location: "Salón Principal",
-    status: "Borrador",
-    capacity: 400,
-    sold: 0,
-    price: 1800,
-    description:
-      "Festival de varios artistas y experiencias en distintas áreas del salón.",
-  },
-];
-
-type Event = (typeof events)[number];
-type EventStatus = Event["status"];
-type EventType = Event["type"];
-
-const statusStyles: Record<EventStatus, string> = {
-  Activo: "border border-emerald-500/40 bg-emerald-500/10 text-emerald-300",
-  Planificado: "border border-amber-500/40 bg-amber-500/10 text-amber-300",
-  Borrador: "border border-zinc-500/40 bg-zinc-500/10 text-zinc-300",
+const tipoEventoLabels: Record<TipoEvento, string> = {
+  [TipoEvento.CONCIERTO]: "Concierto",
+  [TipoEvento.FIESTA_TEMATICA]: "Fiesta temática",
+  [TipoEvento.ESPECTACULO]: "Espectáculo",
+  [TipoEvento.CORPORATIVO]: "Corporativo",
+  [TipoEvento.BODA]: "Boda",
+  [TipoEvento.CUMPLEANOS]: "Cumpleaños",
+  [TipoEvento.OTRO]: "Otro",
 };
 
-const typeStyles: Record<EventType, string> = {
-  "Fiesta temática": "border border-fuchsia-500/30 bg-fuchsia-500/10 text-fuchsia-200",
-  Concierto: "border border-sky-500/30 bg-sky-500/10 text-sky-200",
-  "Evento corporativo": "border border-violet-500/30 bg-violet-500/10 text-violet-200",
-  Festival: "border border-orange-500/30 bg-orange-500/10 text-orange-200",
+const tipoEventoStyles: Record<TipoEvento, string> = {
+  [TipoEvento.CONCIERTO]: "border border-sky-500/30 bg-sky-500/10 text-sky-200",
+  [TipoEvento.FIESTA_TEMATICA]:
+    "border border-fuchsia-500/30 bg-fuchsia-500/10 text-fuchsia-200",
+  [TipoEvento.ESPECTACULO]:
+    "border border-orange-500/30 bg-orange-500/10 text-orange-200",
+  [TipoEvento.CORPORATIVO]:
+    "border border-violet-500/30 bg-violet-500/10 text-violet-200",
+  [TipoEvento.BODA]: "border border-rose-500/30 bg-rose-500/10 text-rose-200",
+  [TipoEvento.CUMPLEANOS]:
+    "border border-amber-500/30 bg-amber-500/10 text-amber-200",
+  [TipoEvento.OTRO]: "border border-zinc-500/30 bg-zinc-500/10 text-zinc-200",
 };
 
-function EventTypeBadge({ type }: { type: EventType }) {
-  return (
-    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${typeStyles[type]}`}>
-      {type}
-    </span>
-  );
+function formatEventoId(idEvento: number) {
+  return `EVT-${String(idEvento).padStart(3, "0")}`;
 }
 
-function EventStatusBadge({ status }: { status: EventStatus }) {
+function formatHorario(horaInicio: string, horaFin: string) {
+  return `${horaInicio.slice(0, 5)} - ${horaFin.slice(0, 5)}`;
+}
+
+function EventTypeBadge({ tipo }: { tipo: TipoEvento }) {
+  const style = tipoEventoStyles[tipo] ?? tipoEventoStyles[TipoEvento.OTRO];
+  const label = tipoEventoLabels[tipo] ?? tipoEventoLabels[TipoEvento.OTRO];
   return (
-    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[status]}`}>
-      {status}
+    <span
+      className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${style}`}
+    >
+      {label}
     </span>
   );
 }
@@ -108,7 +59,9 @@ function DetailItem({
 }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-[#1c1b1a] p-4">
-      <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">{label}</p>
+      <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">
+        {label}
+      </p>
       <div className="mt-2 text-sm text-white">{value}</div>
     </div>
   );
@@ -120,28 +73,16 @@ export default async function EventDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const event = events.find((item) => item.id === id);
 
-  if (!event) {
-    return (
-      <main className="min-h-screen bg-[#161515] p-8 text-white">
-        <div className="mx-auto max-w-4xl rounded-[28px] border border-white/10 bg-[#1b1918] p-8 text-center">
-          <h1 className="text-3xl font-bold">Evento no encontrado</h1>
-          <p className="mt-3 text-zinc-400">
-            No se encontró un evento con el código {id}.
-          </p>
-          <Link
-            href="/eventos"
-            className="mt-6 inline-flex rounded-xl bg-[#a57c2d] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#8d6925]"
-          >
-            Volver a eventos
-          </Link>
-        </div>
-      </main>
-    );
+  let evento: Evento;
+  try {
+    evento = await fetchApi<Evento>(`/eventos/${id}`);
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) {
+      notFound();
+    }
+    throw error;
   }
-
-  const occupancy = getOccupancyPercent(event.sold, event.capacity);
 
   return (
     <main className="min-h-screen bg-[#161515] px-6 py-8 text-white md:px-10">
@@ -153,15 +94,14 @@ export default async function EventDetailPage({
                 Luxury Grand Stage
               </p>
               <h1 className="mt-2 text-3xl font-bold tracking-tight text-white">
-                {event.name}
+                {evento.nombre}
               </h1>
               <p className="mt-2 text-sm text-zinc-300">
-                Código del evento: {event.id}
+                Código del evento: {formatEventoId(evento.idEvento)}
               </p>
 
               <div className="mt-4 flex flex-wrap gap-3">
-                <EventTypeBadge type={event.type} />
-                <EventStatusBadge status={event.status} />
+                <EventTypeBadge tipo={evento.tipo} />
               </div>
             </div>
 
@@ -172,21 +112,37 @@ export default async function EventDetailPage({
               >
                 Volver
               </Link>
-              <button className="rounded-xl bg-[#a57c2d] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#8d6925]">
+              <Link
+                href={`/eventos/${evento.idEvento}/editar`}
+                className="rounded-xl bg-[#a57c2d] px-5 py-3 text-center text-sm font-semibold text-white transition hover:bg-[#8d6925]"
+              >
                 Editar Evento
+              </Link>
+              <button
+                type="button"
+                disabled
+                className="cursor-not-allowed rounded-xl border border-rose-500/30 bg-rose-500/10 px-5 py-3 text-sm font-semibold text-rose-300 opacity-60"
+              >
+                Eliminar
               </button>
             </div>
           </div>
         </section>
 
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <DetailItem label="Fecha" value={formatDate(event.date)} />
+          <DetailItem label="Fecha" value={formatDate(evento.fechaEvento)} />
           <DetailItem
             label="Horario"
-            value={`${event.startTime} - ${event.endTime}`}
+            value={formatHorario(evento.horaInicio, evento.horaFin)}
           />
-          <DetailItem label="Ubicación" value={event.location} />
-          <DetailItem label="Precio" value={formatCurrency(event.price)} />
+          <DetailItem
+            label="Precio boleta"
+            value={formatCurrency(evento.precioBoleta)}
+          />
+          <DetailItem
+            label="Presupuesto"
+            value={formatCurrency(evento.presupuesto)}
+          />
         </section>
 
         <section className="grid gap-6 lg:grid-cols-[2fr_1fr]">
@@ -194,35 +150,47 @@ export default async function EventDetailPage({
             <h2 className="text-xl font-semibold text-white">
               Información general
             </h2>
-            <p className="mt-4 text-sm leading-7 text-zinc-300">
-              {event.description}
-            </p>
+            {evento.descripcion ? (
+              <p className="mt-4 text-sm leading-7 text-zinc-300">
+                {evento.descripcion}
+              </p>
+            ) : (
+              <p className="mt-4 text-sm italic text-zinc-500">
+                Sin descripción.
+              </p>
+            )}
 
             <div className="mt-6 grid gap-4 md:grid-cols-2">
-              <DetailItem label="Capacidad total" value={event.capacity} />
-              <DetailItem label="Boletas vendidas" value={event.sold} />
+              <DetailItem
+                label="Ingreso real"
+                value={formatCurrency(evento.ingresoReal)}
+              />
+              <DetailItem
+                label="Gasto real"
+                value={formatCurrency(evento.gastoReal)}
+              />
             </div>
           </div>
 
           <div className="rounded-[28px] border border-white/10 bg-[#1b1918] p-6 shadow-[0_10px_30px_rgba(0,0,0,0.24)]">
-            <h2 className="text-xl font-semibold text-white">Ocupación</h2>
+            <h2 className="text-xl font-semibold text-white">Metadatos</h2>
             <p className="mt-3 text-sm text-zinc-400">
-              Porcentaje actual de ocupación del evento.
+              Información de registro del evento en el sistema.
             </p>
 
-            <div className="mt-6">
-              <div className="mb-2 flex items-center justify-between text-sm text-zinc-300">
-                <span>
-                  {event.sold}/{event.capacity}
-                </span>
-                <span className="font-semibold text-[#d4af37]">{occupancy}%</span>
-              </div>
-              <div className="h-3 rounded-full bg-white/10">
-                <div
-                  className="h-3 rounded-full bg-[#b88a2f]"
-                  style={{ width: `${occupancy}%` }}
-                />
-              </div>
+            <div className="mt-6 space-y-4">
+              <DetailItem
+                label="Creado el"
+                value={formatDate(evento.creadoEn)}
+              />
+              <DetailItem
+                label="Usuario creador"
+                value={
+                  evento.idUsuarioCreador !== null
+                    ? `#${evento.idUsuarioCreador}`
+                    : "—"
+                }
+              />
             </div>
           </div>
         </section>
