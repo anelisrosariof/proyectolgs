@@ -37,7 +37,7 @@ export default async function EditEventPage({
             nombre: evento.nombre,
             descripcion: evento.descripcion,
             tipo: evento.tipo,
-            fechaEvento: evento.fechaEvento,
+            fechaEvento: evento.fechaEvento.slice(0, 10),
             horaInicio: evento.horaInicio,
             horaFin: evento.horaFin,
             presupuesto: evento.presupuesto,
