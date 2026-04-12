@@ -320,9 +320,12 @@ export default function EventosPage() {
               <button className="rounded-xl border border-[#6f5a2e] bg-[#2a241d] px-5 py-3 text-sm font-semibold text-[#e6c980] transition hover:bg-[#332b22]">
                 Exportar
               </button>
-              <button className="rounded-xl bg-[#a57c2d] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#8d6925]">
+              <Link
+                href="/eventos/nuevo"
+                className="rounded-xl bg-[#a57c2d] px-5 py-3 text-center text-sm font-semibold text-white transition hover:bg-[#8d6925]"
+              >
                 Nuevo Evento
-              </button>
+              </Link>
             </div>
           </div>
         </section>
