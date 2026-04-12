@@ -22,15 +22,25 @@ export async function fetchApi<T>(
 ): Promise<T> {
   const { body, headers, ...rest } = options;
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...rest,
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      ...headers,
-    },
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      ...rest,
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        ...headers,
+      },
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : "Network error";
+    throw new ApiError(
+      `No se pudo conectar al backend en ${API_BASE_URL}. ${reason}`,
+      0,
+      null,
+    );
+  }
 
   const isJson = response.headers
     .get("content-type")
