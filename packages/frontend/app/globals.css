@@ -9,6 +9,7 @@
   --gold: #c5a55a;
   --gold-light: #d4b96c;
   --muted: #9a9a9a;
+  --font-sans: var(--font-poppins);
 }
 
 @theme inline {
@@ -20,8 +21,7 @@
   --color-gold: var(--gold);
   --color-gold-light: var(--gold-light);
   --color-muted: var(--muted);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-poppins);
 }
 
 html,
@@ -32,5 +32,5 @@ body {
 }
 
 body {
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-poppins), sans-serif;
 }
