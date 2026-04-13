@@ -1,55 +1,30 @@
+import { notFound } from "next/navigation";
+
+import { ApiError, fetchApi } from "../../../../lib/api";
+import type { Evento } from "../../../../lib/types/evento";
 import { EventForm } from "../../event-form";
 
-const events = [
-  {
-    id: "EVT-001",
-    name: "Noche de Salsa",
-    type: "Fiesta temática",
-    date: "2026-04-18",
-    startTime: "20:00",
-    endTime: "23:30",
-    location: "Salón Principal",
-    status: "Planificado",
-    capacity: 250,
-    price: 1500,
-    description:
-      "Evento temático con música en vivo, ambientación especial y venta de boletas por zona.",
-  },
-  {
-    id: "EVT-002",
-    name: "Concierto Acústico",
-    type: "Concierto",
-    date: "2026-04-22",
-    startTime: "19:00",
-    endTime: "22:00",
-    location: "Terraza",
-    status: "Activo",
-    capacity: 120,
-    price: 2000,
-    description:
-      "Presentación acústica con cupos limitados, zona general y experiencia íntima para el público.",
-  },
-];
-
+/**
+ * Edit-event route — async Server Component that pre-loads the existing
+ * `Evento` from the backend and hands it to the client `EventForm` as
+ * `initialValues`. A 404 from the API is translated into Next.js's
+ * `notFound()` so the app's global not-found UI takes over.
+ */
 export default async function EditEventPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const event = events.find((item) => item.id === id);
 
-  if (!event) {
-    return (
-      <main className="min-h-screen bg-[#161515] p-8 text-white">
-        <div className="mx-auto max-w-4xl rounded-[28px] border border-white/10 bg-[#1b1918] p-8 text-center">
-          <h1 className="text-3xl font-bold">Evento no encontrado</h1>
-          <p className="mt-3 text-zinc-400">
-            No se encontró un evento con el código {id}.
-          </p>
-        </div>
-      </main>
-    );
+  let evento: Evento;
+  try {
+    evento = await fetchApi<Evento>(`/eventos/${id}`);
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) {
+      notFound();
+    }
+    throw error;
   }
 
   return (
@@ -57,8 +32,19 @@ export default async function EditEventPage({
       <div className="mx-auto max-w-5xl">
         <EventForm
           mode="edit"
-          submitLabel="Guardar Cambios"
-          initialValues={event}
+          eventoId={String(evento.idEvento)}
+          initialValues={{
+            nombre: evento.nombre,
+            descripcion: evento.descripcion,
+            tipo: evento.tipo,
+            fechaEvento: evento.fechaEvento.slice(0, 10),
+            horaInicio: evento.horaInicio,
+            horaFin: evento.horaFin,
+            presupuesto: evento.presupuesto,
+            precioBoleta: evento.precioBoleta,
+            ingresoReal: evento.ingresoReal,
+            gastoReal: evento.gastoReal,
+          }}
         />
       </div>
     </main>
