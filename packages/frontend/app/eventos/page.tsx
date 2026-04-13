@@ -2,35 +2,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { fetchApi } from "../../lib/api";
-import { TipoEvento, type Evento } from "../../lib/types/evento";
+import { EventTypeBadge } from "../../lib/evento-ui";
+import { type Evento } from "../../lib/types/evento";
 import { formatCurrency } from "../../lib/utils/format-currency";
 import { formatDate } from "../../lib/utils/format-date";
 import { DeleteEventButton } from "./delete-event-button";
 import logo from "../lgs_logo512.png";
-
-const tipoEventoLabels: Record<TipoEvento, string> = {
-  [TipoEvento.CONCIERTO]: "Concierto",
-  [TipoEvento.FIESTA_TEMATICA]: "Fiesta temática",
-  [TipoEvento.ESPECTACULO]: "Espectáculo",
-  [TipoEvento.CORPORATIVO]: "Corporativo",
-  [TipoEvento.BODA]: "Boda",
-  [TipoEvento.CUMPLEANOS]: "Cumpleaños",
-  [TipoEvento.OTRO]: "Otro",
-};
-
-const tipoEventoStyles: Record<TipoEvento, string> = {
-  [TipoEvento.CONCIERTO]: "border border-sky-500/30 bg-sky-500/10 text-sky-200",
-  [TipoEvento.FIESTA_TEMATICA]:
-    "border border-fuchsia-500/30 bg-fuchsia-500/10 text-fuchsia-200",
-  [TipoEvento.ESPECTACULO]:
-    "border border-orange-500/30 bg-orange-500/10 text-orange-200",
-  [TipoEvento.CORPORATIVO]:
-    "border border-violet-500/30 bg-violet-500/10 text-violet-200",
-  [TipoEvento.BODA]: "border border-rose-500/30 bg-rose-500/10 text-rose-200",
-  [TipoEvento.CUMPLEANOS]:
-    "border border-amber-500/30 bg-amber-500/10 text-amber-200",
-  [TipoEvento.OTRO]: "border border-zinc-500/30 bg-zinc-500/10 text-zinc-200",
-};
 
 function formatEventoId(idEvento: number) {
   return `EVT-${String(idEvento).padStart(3, "0")}`;
@@ -38,16 +15,6 @@ function formatEventoId(idEvento: number) {
 
 function formatHorario(horaInicio: string, horaFin: string) {
   return `${horaInicio.slice(0, 5)} - ${horaFin.slice(0, 5)}`;
-}
-
-function EventTypeBadge({ tipo }: { tipo: TipoEvento }) {
-  const style = tipoEventoStyles[tipo] ?? tipoEventoStyles[TipoEvento.OTRO];
-  const label = tipoEventoLabels[tipo] ?? tipoEventoLabels[TipoEvento.OTRO];
-  return (
-    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${style}`}>
-      {label}
-    </span>
-  );
 }
 
 function EventRow({ evento }: { evento: Evento }) {
@@ -125,8 +92,8 @@ function EventsEmptyState() {
       </h3>
       <p className="mt-2 max-w-md text-sm text-zinc-400">
         Cuando crees tu primer evento aparecerá aquí. Usa el botón{" "}
-        <span className="font-semibold text-[#c5a55a]">Nuevo Evento</span> en la parte
-        superior para comenzar.
+        <span className="font-semibold text-[#c5a55a]">Nuevo Evento</span> en la
+        parte superior para comenzar.
       </p>
     </div>
   );
@@ -250,11 +217,15 @@ async function EventosContent() {
 
   const totalEvents = eventos.length;
   const uniqueTypes = new Set(eventos.map((evento) => evento.tipo)).size;
-  const totalBudget = eventos.reduce((sum, evento) => sum + evento.presupuesto, 0);
+  const totalBudget = eventos.reduce(
+    (sum, evento) => sum + evento.presupuesto,
+    0,
+  );
   const averageTicketPrice =
     totalEvents === 0
       ? 0
-      : eventos.reduce((sum, evento) => sum + evento.precioBoleta, 0) / totalEvents;
+      : eventos.reduce((sum, evento) => sum + evento.precioBoleta, 0) /
+        totalEvents;
 
   return (
     <>
@@ -268,7 +239,9 @@ async function EventosContent() {
           <p className="mt-4 text-4xl font-bold text-white">{uniqueTypes}</p>
         </article>
         <article className="group rounded-2xl border-2 border-[#d4af37]/20 bg-gradient-to-br from-[#2a2621] to-[#1d1a17] p-6 shadow-lg transition-all hover:border-[#d4af37]/40 hover:shadow-[0_8px_30px_rgba(212,175,55,0.15)]">
-          <p className="text-sm font-medium text-[#d4af37]">Presupuesto total</p>
+          <p className="text-sm font-medium text-[#d4af37]">
+            Presupuesto total
+          </p>
           <p className="mt-4 text-4xl font-bold text-white">
             {formatCurrency(totalBudget)}
           </p>
@@ -281,7 +254,9 @@ async function EventosContent() {
       <section className="rounded-3xl border-2 border-[#d4af37]/20 bg-gradient-to-br from-[#2a2621] to-[#1d1a17] shadow-[0_20px_60px_rgba(0,0,0,0.4)]">
         <div className="flex flex-col gap-4 border-b-2 border-[#d4af37]/20 p-7 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-white">Eventos registrados</h2>
+            <h2 className="text-2xl font-bold text-white">
+              Eventos registrados
+            </h2>
             <p className="mt-2 text-sm text-zinc-400">
               Vista general del CRUD de eventos para administración.
             </p>
@@ -315,7 +290,9 @@ function EventosContentFallback() {
           <div className="mt-4 h-9 w-16 animate-pulse rounded bg-white/10" />
         </article>
         <article className="group rounded-2xl border-2 border-[#d4af37]/20 bg-gradient-to-br from-[#2a2621] to-[#1d1a17] p-6 shadow-lg">
-          <p className="text-sm font-medium text-[#d4af37]">Presupuesto total</p>
+          <p className="text-sm font-medium text-[#d4af37]">
+            Presupuesto total
+          </p>
           <div className="mt-4 h-9 w-32 animate-pulse rounded bg-white/10" />
           <div className="mt-2 h-3 w-48 animate-pulse rounded bg-white/5" />
         </article>
@@ -324,7 +301,9 @@ function EventosContentFallback() {
       <section className="rounded-3xl border-2 border-[#d4af37]/20 bg-gradient-to-br from-[#2a2621] to-[#1d1a17] shadow-[0_20px_60px_rgba(0,0,0,0.4)]">
         <div className="flex flex-col gap-4 border-b-2 border-[#d4af37]/20 p-7 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-white">Eventos registrados</h2>
+            <h2 className="text-2xl font-bold text-white">
+              Eventos registrados
+            </h2>
             <p className="mt-2 text-sm text-zinc-400">
               Vista general del CRUD de eventos para administración.
             </p>
@@ -363,8 +342,8 @@ export default function EventosPage() {
                   Lista de Eventos
                 </h1>
                 <p className="mt-3 max-w-2xl text-sm leading-relaxed text-zinc-400">
-                  Consulta los eventos registrados, su tipo, horario, precio de boleta y
-                  presupuesto asignado.
+                  Consulta los eventos registrados, su tipo, horario, precio de
+                  boleta y presupuesto asignado.
                 </p>
               </div>
             </div>

@@ -2,34 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { ApiError, fetchApi } from "../../../lib/api";
-import { TipoEvento, type Evento } from "../../../lib/types/evento";
+import { EventTypeBadge } from "../../../lib/evento-ui";
+import { type Evento } from "../../../lib/types/evento";
 import { formatCurrency } from "../../../lib/utils/format-currency";
 import { formatDate } from "../../../lib/utils/format-date";
 import { DeleteEventButton } from "../delete-event-button";
-
-const tipoEventoLabels: Record<TipoEvento, string> = {
-  [TipoEvento.CONCIERTO]: "Concierto",
-  [TipoEvento.FIESTA_TEMATICA]: "Fiesta temática",
-  [TipoEvento.ESPECTACULO]: "Espectáculo",
-  [TipoEvento.CORPORATIVO]: "Corporativo",
-  [TipoEvento.BODA]: "Boda",
-  [TipoEvento.CUMPLEANOS]: "Cumpleaños",
-  [TipoEvento.OTRO]: "Otro",
-};
-
-const tipoEventoStyles: Record<TipoEvento, string> = {
-  [TipoEvento.CONCIERTO]: "border border-sky-500/30 bg-sky-500/10 text-sky-200",
-  [TipoEvento.FIESTA_TEMATICA]:
-    "border border-fuchsia-500/30 bg-fuchsia-500/10 text-fuchsia-200",
-  [TipoEvento.ESPECTACULO]:
-    "border border-orange-500/30 bg-orange-500/10 text-orange-200",
-  [TipoEvento.CORPORATIVO]:
-    "border border-violet-500/30 bg-violet-500/10 text-violet-200",
-  [TipoEvento.BODA]: "border border-rose-500/30 bg-rose-500/10 text-rose-200",
-  [TipoEvento.CUMPLEANOS]:
-    "border border-amber-500/30 bg-amber-500/10 text-amber-200",
-  [TipoEvento.OTRO]: "border border-zinc-500/30 bg-zinc-500/10 text-zinc-200",
-};
 
 function formatEventoId(idEvento: number) {
   return `EVT-${String(idEvento).padStart(3, "0")}`;
@@ -37,18 +14,6 @@ function formatEventoId(idEvento: number) {
 
 function formatHorario(horaInicio: string, horaFin: string) {
   return `${horaInicio.slice(0, 5)} - ${horaFin.slice(0, 5)}`;
-}
-
-function EventTypeBadge({ tipo }: { tipo: TipoEvento }) {
-  const style = tipoEventoStyles[tipo] ?? tipoEventoStyles[TipoEvento.OTRO];
-  const label = tipoEventoLabels[tipo] ?? tipoEventoLabels[TipoEvento.OTRO];
-  return (
-    <span
-      className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${style}`}
-    >
-      {label}
-    </span>
-  );
 }
 
 function DetailItem({

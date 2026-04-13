@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition, type FormEvent } from "react";
 
 import { ApiError, fetchApi } from "../../lib/api";
-import { TipoEvento } from "../../lib/types/evento";
+import { TipoEvento, tipoEventoOptions } from "../../lib/types/evento";
 
 type EventFormProps = {
   mode?: "create" | "edit";
@@ -68,16 +68,6 @@ function parseFormData(formData: FormData): EventoPayload {
     gastoReal: Number(formData.get("gastoReal") ?? 0),
   };
 }
-
-const tipoEventoOptions: Array<{ value: TipoEvento; label: string }> = [
-  { value: TipoEvento.CONCIERTO, label: "Concierto" },
-  { value: TipoEvento.FIESTA_TEMATICA, label: "Fiesta temática" },
-  { value: TipoEvento.ESPECTACULO, label: "Espectáculo" },
-  { value: TipoEvento.CORPORATIVO, label: "Corporativo" },
-  { value: TipoEvento.BODA, label: "Boda" },
-  { value: TipoEvento.CUMPLEANOS, label: "Cumpleaños" },
-  { value: TipoEvento.OTRO, label: "Otro" },
-];
 
 const baseInputClass =
   "w-full rounded-xl border bg-[#25211d] px-4 py-3 text-sm text-white outline-none transition placeholder:text-zinc-500";

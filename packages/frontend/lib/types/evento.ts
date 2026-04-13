@@ -7,4 +7,9 @@
  * `Evento` for ergonomic use inside React components.
  */
 export type { IEvento as Evento } from "@luxury-grand-stage/core";
-export { TipoEvento, TIPO_EVENTO_VALUES } from "@luxury-grand-stage/core";
+export {
+  TipoEvento,
+  TIPO_EVENTO_VALUES,
+  tipoEventoLabels,
+  tipoEventoOptions,
+} from "@luxury-grand-stage/core";

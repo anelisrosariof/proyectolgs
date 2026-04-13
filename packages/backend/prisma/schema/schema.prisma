@@ -13,13 +13,8 @@ datasource db {
 }
 
 enum TipoEvento {
-  CONCIERTO
-  FIESTA_TEMATICA
-  ESPECTACULO
-  CORPORATIVO
-  BODA
-  CUMPLEANOS
-  OTRO
+  PRIVADO
+  FIESTA
 }
 
 model Evento {
