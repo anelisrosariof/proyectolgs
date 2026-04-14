@@ -23,8 +23,6 @@ type EventFormProps = {
     horaFin?: string;
     presupuesto?: number;
     precioBoleta?: number;
-    ingresoReal?: number;
-    gastoReal?: number;
   };
 };
 
@@ -42,8 +40,6 @@ type EventoPayload = {
   horaFin: string;
   presupuesto: number;
   precioBoleta: number;
-  ingresoReal: number;
-  gastoReal: number;
 };
 
 /**
@@ -64,8 +60,6 @@ function parseFormData(formData: FormData): EventoPayload {
     horaFin: (formData.get("horaFin") ?? "").toString(),
     presupuesto: Number(formData.get("presupuesto") ?? 0),
     precioBoleta: Number(formData.get("precioBoleta") ?? 0),
-    ingresoReal: Number(formData.get("ingresoReal") ?? 0),
-    gastoReal: Number(formData.get("gastoReal") ?? 0),
   };
 }
 
@@ -348,44 +342,6 @@ export function EventForm({
               className={inputClassName(Boolean(fieldErrors.presupuesto))}
             />
             <FieldError message={fieldErrors.presupuesto} />
-          </div>
-
-          {/* Ingreso real — optional, default 0 */}
-          <div>
-            <label className={labelClass} htmlFor="ingresoReal">
-              Ingreso real
-            </label>
-            <input
-              id="ingresoReal"
-              name="ingresoReal"
-              type="number"
-              min="0"
-              step="0.01"
-              defaultValue={numberDefault(initialValues.ingresoReal ?? 0)}
-              placeholder="0.00"
-              aria-invalid={fieldErrors.ingresoReal ? true : undefined}
-              className={inputClassName(Boolean(fieldErrors.ingresoReal))}
-            />
-            <FieldError message={fieldErrors.ingresoReal} />
-          </div>
-
-          {/* Gasto real — optional, default 0 */}
-          <div>
-            <label className={labelClass} htmlFor="gastoReal">
-              Gasto real
-            </label>
-            <input
-              id="gastoReal"
-              name="gastoReal"
-              type="number"
-              min="0"
-              step="0.01"
-              defaultValue={numberDefault(initialValues.gastoReal ?? 0)}
-              placeholder="0.00"
-              aria-invalid={fieldErrors.gastoReal ? true : undefined}
-              className={inputClassName(Boolean(fieldErrors.gastoReal))}
-            />
-            <FieldError message={fieldErrors.gastoReal} />
           </div>
 
           {/* Descripción — optional, full width */}
