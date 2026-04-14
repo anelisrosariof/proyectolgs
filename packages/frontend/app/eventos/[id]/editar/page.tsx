@@ -42,8 +42,6 @@ export default async function EditEventPage({
             horaFin: evento.horaFin,
             presupuesto: evento.presupuesto,
             precioBoleta: evento.precioBoleta,
-            ingresoReal: evento.ingresoReal,
-            gastoReal: evento.gastoReal,
           }}
         />
       </div>

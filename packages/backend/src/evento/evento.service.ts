@@ -8,14 +8,15 @@ export class EventoService {
 
   async findAll() {
     const eventos = await this.prisma.evento.findMany({
+      where: { eliminadoEn: null },
       orderBy: { fechaEvento: 'desc' },
     });
     return eventos.map((e) => this.serialize(e));
   }
 
   async findOne(id: number) {
-    const evento = await this.prisma.evento.findUnique({
-      where: { idEvento: id },
+    const evento = await this.prisma.evento.findFirst({
+      where: { idEvento: id, eliminadoEn: null },
     });
     if (!evento) {
       throw new NotFoundException(`Evento with id ${id} not found`);
@@ -33,8 +34,6 @@ export class EventoService {
         horaInicio: this.parseTime(dto.horaInicio),
         horaFin: this.parseTime(dto.horaFin),
         presupuesto: dto.presupuesto,
-        ingresoReal: dto.ingresoReal ?? 0,
-        gastoReal: dto.gastoReal ?? 0,
         precioBoleta: dto.precioBoleta,
         idUsuarioCreador: dto.idUsuarioCreador ?? null,
       },
@@ -70,8 +69,9 @@ export class EventoService {
 
   async remove(id: number) {
     await this.findOne(id);
-    const evento = await this.prisma.evento.delete({
+    const evento = await this.prisma.evento.update({
       where: { idEvento: id },
+      data: { eliminadoEn: new Date() },
     });
     return this.serialize(evento);
   }

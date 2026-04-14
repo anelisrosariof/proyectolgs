@@ -38,16 +38,6 @@ export class CreateEventoDto {
   @Min(0)
   presupuesto!: number;
 
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  ingresoReal?: number;
-
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  gastoReal?: number;
-
   @IsNumber()
   @Min(0)
   precioBoleta!: number;

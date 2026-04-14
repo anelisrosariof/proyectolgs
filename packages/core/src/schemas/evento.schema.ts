@@ -20,13 +20,14 @@ export const createEventoSchema = z.object({
     .string()
     .regex(/^\d{2}:\d{2}$/, 'Formato de hora invalido (HH:mm)'),
   presupuesto: z.coerce.number().min(0, 'El presupuesto debe ser mayor o igual a 0'),
-  ingresoReal: z.coerce.number().min(0).default(0),
-  gastoReal: z.coerce.number().min(0).default(0),
   precioBoleta: z.coerce.number().min(0, 'El precio de boleta debe ser mayor o igual a 0'),
   idUsuarioCreador: z.number().int().nullable().optional(),
 });
 
-export const updateEventoSchema = createEventoSchema.partial();
+export const updateEventoSchema = createEventoSchema.partial().extend({
+  ingresoReal: z.coerce.number().min(0).optional(),
+  gastoReal: z.coerce.number().min(0).optional(),
+});
 
 export type CreateEventoInput = z.infer<typeof createEventoSchema>;
 export type UpdateEventoInput = z.infer<typeof updateEventoSchema>;

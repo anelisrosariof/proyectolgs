@@ -78,7 +78,7 @@ export function DeleteEventDialog({
         </div>
 
         <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-200">
-          Esta acción no se puede deshacer.
+          El evento será marcado como eliminado y no aparecerá en el sistema.
         </div>
 
         {errorMessage && (
