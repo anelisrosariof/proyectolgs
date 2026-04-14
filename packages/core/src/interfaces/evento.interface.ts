@@ -14,4 +14,5 @@ export interface IEvento {
   gastoReal: number;
   precioBoleta: number;
   creadoEn: string;
+  eliminadoEn?: string | null;
 }

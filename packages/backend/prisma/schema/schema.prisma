@@ -31,6 +31,7 @@ model Evento {
   gastoReal        Decimal    @default(0) @map("gasto_real") @db.Decimal(12, 2)
   precioBoleta     Decimal    @default(0) @map("precio_boleta") @db.Decimal(12, 2)
   creadoEn         DateTime   @default(now()) @map("creado_en")
+  eliminadoEn      DateTime?  @map("eliminado_en")
 
   @@map("evento")
 }
